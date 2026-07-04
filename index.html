@@ -3,2185 +3,771 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>デジカ ソロ練習</title>
+<title>DigiCA Tool</title>
 <style>
-:root {
-  --bg: #080d1a;
-  --bg2: #0e1628;
-  --bg3: #141e34;
-  --border: #1e3050;
-  --border2: #2a4a7a;
-  --accent: #4a9eff;
-  --accent2: #7eb8f7;
-  --text: #d0ddf5;
-  --text2: #7090b0;
-  --red: #e05050;
-  --green: #40c080;
-  --yellow: #e0c040;
-}
-* { box-sizing: border-box; margin: 0; padding: 0; }
-body { background: var(--bg); color: var(--text); font-family: 'Segoe UI', sans-serif; font-size: 13px; min-height: 100vh; }
+  :root {
+    --bg: #14151a;
+    --panel: #1c1e26;
+    --panel-raised: #22242e;
+    --border: #2a2d38;
+    --text: #e8e9ed;
+    --text-dim: #8b8d98;
+    --accent: #4fd8c4;
+    --accent-dim: #2d7d72;
+    --danger: #e85d5d;
 
-/* ========== SCREENS ========== */
-.screen { display: none; }
-.screen.active { display: flex; }
+    /* Digimon card colors (established reference values) */
+    --c-red: #c0302a;
+    --c-blue: #2a6fb0;
+    --c-yellow: #d4a017;
+    --c-green: #3a8a4a;
+    --c-black: #3a3a3e;
+    --c-purple: #7a4a9a;
+    --c-white: #d8d4c8;
+  }
 
-/* ========== BUILDER SCREEN ========== */
-#builder-screen {
-  flex-direction: row;
-  height: 100vh;
-  overflow: hidden;
-}
+  * { box-sizing: border-box; }
 
-/* LEFT: search panel */
-.search-panel {
-  width: 280px;
-  min-width: 240px;
-  background: var(--bg2);
-  border-right: 1px solid var(--border);
-  display: flex;
-  flex-direction: column;
-  overflow: hidden;
-}
-.panel-head {
-  padding: 12px;
-  border-bottom: 1px solid var(--border);
-}
-.panel-head h2 { font-size: 14px; color: var(--accent2); margin-bottom: 8px; letter-spacing: 1px; }
-.search-input {
-  width: 100%;
-  background: var(--bg3);
-  border: 1px solid var(--border2);
-  color: var(--text);
-  border-radius: 6px;
-  padding: 7px 10px;
-  font-size: 12px;
-  outline: none;
-}
-.search-input:focus { border-color: var(--accent); }
-.search-hint { font-size: 10px; color: var(--text2); margin-top: 5px; }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Hiragino Sans', 'Noto Sans JP', system-ui, -apple-system, sans-serif;
+    min-height: 100vh;
+  }
 
-.search-results {
-  flex: 1;
-  overflow-y: auto;
-  padding: 6px;
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-}
-.search-loading { color: var(--text2); font-size: 11px; padding: 10px; text-align: center; }
+  .mono {
+    font-family: 'JetBrains Mono', 'SF Mono', Consolas, monospace;
+  }
 
-/* card search result item */
-.result-card {
-  display: flex;
-  gap: 8px;
-  background: var(--bg3);
-  border: 1px solid var(--border);
-  border-radius: 6px;
-  padding: 6px;
-  cursor: pointer;
-  transition: border-color 0.15s, background 0.15s;
-  align-items: flex-start;
-}
-.result-card:hover { border-color: var(--accent); background: #1a2a44; }
-.result-thumb {
-  width: 44px;
-  height: 62px;
-  border-radius: 3px;
-  flex-shrink: 0;
-  display: flex;
-  flex-direction: column;
-  overflow: hidden;
-  border: 1px solid var(--border);
-}
-.result-info { flex: 1; min-width: 0; }
-.result-name { font-size: 12px; font-weight: bold; color: var(--text); line-height: 1.3; }
-.result-id { font-size: 10px; color: var(--accent2); margin-top: 2px; }
-.result-meta { font-size: 10px; color: var(--text2); margin-top: 2px; line-height: 1.4; }
-.result-add-btn {
-  background: var(--accent);
-  color: #fff;
-  border: none;
-  border-radius: 4px;
-  padding: 3px 8px;
-  font-size: 11px;
-  cursor: pointer;
-  margin-top: 4px;
-  white-space: nowrap;
-}
-.result-add-btn:hover { background: #6ab0ff; }
+  /* ---- Header / status bar (signature element) ---- */
+  header {
+    border-bottom: 1px solid var(--border);
+    background: var(--panel);
+    padding: 10px 16px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    flex-wrap: wrap;
+  }
 
-/* RIGHT: deck list panel */
-.deck-panel {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  overflow: hidden;
-}
-.deck-panel-head {
-  padding: 12px 16px;
-  border-bottom: 1px solid var(--border);
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  background: var(--bg2);
-}
-.deck-panel-head h2 { font-size: 14px; color: var(--accent2); flex: 1; }
-.deck-tabs { display: flex; gap: 4px; }
-.deck-tab {
-  background: var(--bg3);
-  border: 1px solid var(--border);
-  color: var(--text2);
-  border-radius: 5px;
-  padding: 4px 12px;
-  cursor: pointer;
-  font-size: 12px;
-}
-.deck-tab.active { background: var(--accent); color: #fff; border-color: var(--accent); }
-.btn-start {
-  background: var(--green);
-  color: #fff;
-  border: none;
-  border-radius: 6px;
-  padding: 6px 18px;
-  font-size: 13px;
-  cursor: pointer;
-  font-weight: bold;
-  letter-spacing: 1px;
-}
-.btn-start:hover { background: #50d090; }
-.btn-start:disabled { background: #2a4a3a; color: #507050; cursor: not-allowed; }
+  .brand {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
 
-.deck-body { flex: 1; overflow-y: auto; padding: 10px; }
-.deck-section { margin-bottom: 16px; }
-.deck-section-label {
-  font-size: 10px;
-  color: var(--text2);
-  letter-spacing: 1px;
-  text-transform: uppercase;
-  margin-bottom: 6px;
-  padding-bottom: 4px;
-  border-bottom: 1px solid var(--border);
-}
-.deck-cards { display: flex; flex-wrap: wrap; gap: 6px; }
-.deck-card-item {
-  position: relative;
-  width: 60px;
-  cursor: pointer;
-}
-/* deck-card-item: color face only */
-.deck-card-count {
-  position: absolute;
-  bottom: 3px;
-  right: 3px;
-  background: rgba(0,0,0,0.8);
-  color: var(--accent2);
-  font-size: 12px;
-  font-weight: bold;
-  padding: 1px 5px;
-  border-radius: 3px;
-  line-height: 1.4;
-}
-.deck-card-remove {
-  position: absolute;
-  top: 2px;
-  right: 2px;
-  background: var(--red);
-  color: #fff;
-  border: none;
-  border-radius: 3px;
-  font-size: 10px;
-  padding: 1px 4px;
-  cursor: pointer;
-  display: none;
-}
-.deck-card-item:hover .deck-card-remove { display: block; }
-.deck-empty { color: var(--text2); font-size: 11px; padding: 10px 0; }
+  .brand .dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: var(--accent);
+    box-shadow: 0 0 6px var(--accent);
+    animation: pulse 2s ease-in-out infinite;
+  }
 
-/* count bar */
-.count-bar {
-  padding: 8px 16px;
-  background: var(--bg2);
-  border-top: 1px solid var(--border);
-  display: flex;
-  gap: 16px;
-  font-size: 11px;
-  color: var(--text2);
-}
-.count-ok { color: var(--green); }
-.count-over { color: var(--red); }
+  @keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.35; }
+  }
 
-/* ========== GAME SCREEN ========== */
-#game-screen {
-  flex-direction: column;
-  height: 100vh;
-  overflow: hidden;
-}
+  .brand h1 {
+    font-size: 15px;
+    letter-spacing: 0.06em;
+    margin: 0;
+    font-weight: 600;
+  }
 
-.game-topbar {
-  background: var(--bg2);
-  border-bottom: 1px solid var(--border);
-  padding: 6px 12px;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  flex-shrink: 0;
-}
-.game-title { font-size: 13px; color: var(--accent2); flex: 1; }
-.g-btn {
-  background: var(--bg3);
-  border: 1px solid var(--border2);
-  color: var(--text2);
-  border-radius: 5px;
-  padding: 4px 12px;
-  cursor: pointer;
-  font-size: 12px;
-}
-.g-btn:hover { background: #1a2a4a; color: var(--text); }
-.g-btn.primary { background: var(--accent); color: #fff; border-color: var(--accent); }
+  .status-readout {
+    font-size: 11px;
+    color: var(--text-dim);
+    display: flex;
+    gap: 14px;
+    align-items: center;
+  }
 
-.game-field {
-  flex: 1;
-  display: grid;
-  grid-template-columns: 90px 1fr 130px;
-  grid-template-rows: 1fr auto;
-  gap: 6px;
-  padding: 6px;
-  overflow: hidden;
-}
+  .status-readout span.val {
+    color: var(--accent);
+  }
 
-/* zones */
-.zone {
-  background: var(--bg2);
-  border: 1px solid var(--border);
-  border-radius: 7px;
-  padding: 6px;
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-  overflow: hidden;
-}
-.zone-label {
-  font-size: 9px;
-  color: var(--text2);
-  letter-spacing: 1px;
-  text-transform: uppercase;
-  flex-shrink: 0;
-}
+  .settings-btn {
+    background: none;
+    border: 1px solid var(--border);
+    color: var(--text-dim);
+    border-radius: 6px;
+    padding: 6px 10px;
+    font-size: 12px;
+    cursor: pointer;
+  }
+  .settings-btn:hover { color: var(--text); border-color: var(--accent-dim); }
 
-/* left col */
-.left-col { display: flex; flex-direction: column; gap: 6px; grid-row: 1 / 3; }
+  .header-actions {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
 
-.deck-stack {
-  cursor: pointer;
-  align-items: center;
-  justify-content: center;
-  text-align: center;
-  min-height: 80px;
-  transition: background 0.15s;
-}
-.deck-stack:hover { background: var(--bg3); }
-.deck-stack-count { font-size: 26px; font-weight: bold; color: var(--accent); line-height: 1; }
-.deck-stack-sub { font-size: 10px; color: var(--text2); margin-top: 2px; }
+  .db-admin-btn {
+    background: none;
+    border: 1px solid transparent;
+    color: var(--text-dim);
+    border-radius: 6px;
+    padding: 6px 8px;
+    font-size: 11px;
+    cursor: pointer;
+    opacity: 0.6;
+  }
+  .db-admin-btn:hover { opacity: 1; color: var(--text); border-color: var(--border); }
 
-.ikusei-field {
-  flex: 1;
-  overflow-y: auto;
-}
-.field-drop {
-  min-height: 50px;
-  background: #0a1220;
-  border: 1px dashed var(--border);
-  border-radius: 5px;
-  padding: 4px;
-  display: flex;
-  flex-wrap: wrap;
-  gap: 4px;
-  align-content: flex-start;
-}
-.field-drop.dragover { border-color: var(--accent); background: #0f1e38; }
+  /* ---- Tabs ---- */
+  nav.tabs {
+    display: flex;
+    border-bottom: 1px solid var(--border);
+    background: var(--bg);
+    padding: 0 16px;
+    gap: 2px;
+    overflow-x: auto;
+  }
 
-/* center: battle area */
-.center-col { display: flex; flex-direction: column; gap: 6px; }
-.battle-zone { flex: 1; overflow-y: auto; }
+  nav.tabs button {
+    background: none;
+    border: none;
+    color: var(--text-dim);
+    padding: 12px 16px;
+    font-size: 13px;
+    font-weight: 500;
+    cursor: pointer;
+    border-bottom: 2px solid transparent;
+    white-space: nowrap;
+  }
 
-/* right col */
-.right-col { display: flex; flex-direction: column; gap: 6px; grid-row: 1 / 3; }
+  nav.tabs button:hover { color: var(--text); }
 
-.security-zone { flex-shrink: 0; }
-.security-pips { display: flex; flex-wrap: wrap; gap: 3px; margin-top: 4px; }
-.sec-pip {
-  width: 22px;
-  height: 30px;
-  background: #1a3a6a;
-  border: 1px solid var(--border2);
-  border-radius: 3px;
-  cursor: pointer;
-  transition: background 0.15s;
-}
-.sec-pip:hover { background: var(--red); border-color: #e07070; }
+  nav.tabs button.active {
+    color: var(--accent);
+    border-bottom-color: var(--accent);
+  }
 
-.trash-zone { flex-shrink: 0; cursor: pointer; }
-.trash-zone:hover { background: var(--bg3); }
-.trash-top-card {
-  width: 100%;
-  aspect-ratio: 5/7;
-  object-fit: cover;
-  border-radius: 4px;
-  border: 1px solid var(--border);
-  margin-top: 4px;
-  display: block;
-}
-.trash-placeholder { font-size: 10px; color: var(--text2); text-align: center; padding: 10px 0; }
+  main {
+    padding: 20px 16px 60px;
+    max-width: 1100px;
+    margin: 0 auto;
+  }
 
-/* hand area */
-.hand-area { grid-column: 2 / 3; }
-.hand-cards { display: flex; flex-wrap: wrap; gap: 5px; overflow-y: auto; max-height: 110px; }
+  .panel {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 20px;
+  }
 
-/* game card chip */
-.g-card {
-  position: relative;
-  cursor: grab;
-  display: inline-block;
-  width: 54px;
-  flex-shrink: 0;
-}
-.g-card-face {
-  width: 54px;
-  height: 76px;
-  border-radius: 5px;
-  border: 1px solid var(--border);
-  display: flex;
-  flex-direction: column;
-  overflow: hidden;
-  transition: transform 0.1s, border-color 0.1s;
-  user-select: none;
-}
-.g-card.tapped .g-card-face {
-  transform: rotate(90deg);
-  margin: 11px -11px;
-}
-.g-card:hover .g-card-face { border-color: var(--accent); }
-.g-card-color {
-  flex: 1;
-  display: flex;
-  min-height: 0;
-}
-.g-card-color-seg { flex: 1; }
-.g-card-info {
-  background: rgba(0,0,0,0.72);
-  padding: 2px 3px;
-  flex-shrink: 0;
-}
-.g-card-type {
-  font-size: 8px;
-  color: #aac8ff;
-  line-height: 1.3;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-.g-card-cost {
-  font-size: 8px;
-  color: #ffe080;
-  line-height: 1.2;
-}
-.g-card-name {
-  font-size: 7.5px;
-  color: #e8eeff;
-  line-height: 1.2;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-.g-card .card-menu-btn {
-  position: absolute;
-  bottom: 2px;
-  left: 50%;
-  transform: translateX(-50%);
-  background: rgba(0,0,0,0.85);
-  border: none;
-  color: var(--accent2);
-  border-radius: 3px;
-  font-size: 9px;
-  padding: 2px 6px;
-  cursor: pointer;
-  white-space: nowrap;
-  display: none;
-  z-index: 10;
-}
-.g-card:hover .card-menu-btn { display: block; }
+  .placeholder {
+    color: var(--text-dim);
+    font-size: 13px;
+    line-height: 1.8;
+  }
 
-/* log */
-.game-log {
-  flex-shrink: 0;
-  background: var(--bg);
-  border-top: 1px solid var(--border);
-  padding: 4px 12px;
-  font-size: 10px;
-  color: var(--text2);
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
+  .placeholder .phase-tag {
+    display: inline-block;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    background: var(--panel-raised);
+    border: 1px solid var(--border);
+    color: var(--accent);
+    padding: 2px 8px;
+    border-radius: 4px;
+    margin-bottom: 10px;
+  }
 
-/* context menu */
-.ctx {
-  display: none;
-  position: fixed;
-  background: var(--bg2);
-  border: 1px solid var(--border2);
-  border-radius: 7px;
-  padding: 5px;
-  z-index: 500;
-  min-width: 150px;
-  box-shadow: 0 6px 24px rgba(0,0,0,0.7);
-}
-.ctx.open { display: block; }
-.ctx-item {
-  padding: 6px 12px;
-  border-radius: 4px;
-  cursor: pointer;
-  font-size: 12px;
-  color: var(--text);
-}
-.ctx-item:hover { background: #1a3a6a; }
-.ctx-sep { border-top: 1px solid var(--border); margin: 3px 0; }
+  /* ---- Modal (settings) ---- */
+  .modal-backdrop {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.6);
+    align-items: center;
+    justify-content: center;
+    z-index: 100;
+  }
+  .modal-backdrop.open { display: flex; }
 
-/* modal */
-.modal-overlay {
-  display: none;
-  position: fixed;
-  inset: 0;
-  background: rgba(0,0,0,0.8);
-  z-index: 300;
-  align-items: center;
-  justify-content: center;
-}
-.modal-overlay.open { display: flex; }
-.modal {
-  background: var(--bg2);
-  border: 1px solid var(--border2);
-  border-radius: 10px;
-  padding: 16px;
-  width: 360px;
-  max-height: 75vh;
-  overflow-y: auto;
-}
-.modal h3 { color: var(--accent2); font-size: 13px; margin-bottom: 10px; }
-.modal-cards { display: flex; flex-wrap: wrap; gap: 6px; }
-.modal-close {
-  margin-top: 12px;
-  width: 100%;
-  background: var(--bg3);
-  border: 1px solid var(--border);
-  color: var(--accent2);
-  border-radius: 6px;
-  padding: 7px;
-  cursor: pointer;
-  font-size: 12px;
-}
+  .modal {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    width: min(440px, 92vw);
+    padding: 20px;
+  }
 
-/* card detail tooltip */
-.card-detail-overlay {
-  display: none;
-  position: fixed;
-  inset: 0;
-  z-index: 400;
-  align-items: center;
-  justify-content: center;
-  background: rgba(0,0,0,0.7);
-}
-.card-detail-overlay.open { display: flex; }
-.card-detail {
-  background: var(--bg2);
-  border: 1px solid var(--border2);
-  border-radius: 10px;
-  padding: 16px;
-  display: flex;
-  gap: 14px;
-  max-width: 520px;
-  width: 90vw;
-}
-.card-detail img { width: 120px; height: 168px; object-fit: cover; border-radius: 6px; flex-shrink: 0; }
-.card-detail-info { flex: 1; overflow-y: auto; }
-.cd-name { font-size: 15px; font-weight: bold; color: var(--text); }
-.cd-id { font-size: 11px; color: var(--accent2); margin-top: 2px; }
-.cd-stats { font-size: 11px; color: var(--text2); margin-top: 6px; line-height: 1.8; }
-.cd-effect { font-size: 11px; color: var(--text); margin-top: 8px; line-height: 1.6; white-space: pre-wrap; }
-.cd-close {
-  position: absolute;
-  top: 10px;
-  right: 10px;
-  background: var(--bg3);
-  border: 1px solid var(--border);
-  color: var(--text2);
-  border-radius: 5px;
-  padding: 4px 10px;
-  cursor: pointer;
-  font-size: 12px;
-}
+  .modal h2 {
+    font-size: 14px;
+    margin: 0 0 14px;
+    color: var(--text);
+  }
 
-/* scrollbars */
-::-webkit-scrollbar { width: 5px; height: 5px; }
-::-webkit-scrollbar-track { background: transparent; }
-::-webkit-scrollbar-thumb { background: #2a3a5a; border-radius: 3px; }
+  .field {
+    margin-bottom: 14px;
+  }
+
+  .field label {
+    display: block;
+    font-size: 12px;
+    color: var(--text-dim);
+    margin-bottom: 6px;
+  }
+
+  .field input {
+    width: 100%;
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 9px 10px;
+    color: var(--text);
+    font-size: 13px;
+    font-family: 'JetBrains Mono', monospace;
+  }
+
+  .field input:focus {
+    outline: none;
+    border-color: var(--accent-dim);
+  }
+
+  .field .hint {
+    font-size: 11px;
+    color: var(--text-dim);
+    margin-top: 5px;
+  }
+
+  .modal-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 8px;
+    margin-top: 16px;
+  }
+
+  button.btn {
+    border: 1px solid var(--border);
+    background: var(--panel-raised);
+    color: var(--text);
+    padding: 8px 16px;
+    border-radius: 6px;
+    font-size: 13px;
+    cursor: pointer;
+  }
+  button.btn:hover { border-color: var(--accent-dim); }
+
+  button.btn.primary {
+    background: var(--accent);
+    border-color: var(--accent);
+    color: #0b1210;
+    font-weight: 600;
+  }
+  button.btn.primary:hover { background: var(--accent-dim); border-color: var(--accent-dim); color: var(--text); }
+
+  .save-msg {
+    font-size: 12px;
+    color: var(--accent);
+    margin-left: auto;
+    align-self: center;
+    display: none;
+  }
+
+  footer {
+    text-align: center;
+    font-size: 11px;
+    color: var(--text-dim);
+    padding: 20px 16px 30px;
+  }
+  footer a { color: var(--text-dim); }
+
+  /* ---- DB management tab ---- */
+  .db-section {
+    margin-bottom: 20px;
+  }
+  .db-section h3 {
+    font-size: 12px;
+    color: var(--text-dim);
+    margin: 0 0 10px;
+    letter-spacing: 0.04em;
+  }
+
+  .db-current {
+    display: flex;
+    gap: 24px;
+    font-size: 13px;
+    margin-bottom: 16px;
+  }
+  .db-current .kv { color: var(--text-dim); }
+  .db-current .kv .v { color: var(--accent); font-family: 'JetBrains Mono', monospace; }
+
+  .progress-track {
+    width: 100%;
+    height: 6px;
+    background: var(--bg);
+    border-radius: 4px;
+    overflow: hidden;
+    margin: 10px 0;
+    display: none;
+    border: 1px solid var(--border);
+  }
+  .progress-track.active { display: block; }
+  .progress-fill {
+    height: 100%;
+    width: 0%;
+    background: var(--accent);
+    transition: width 0.15s ease;
+  }
+
+  .log-console {
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 12px 14px;
+    font-family: 'JetBrains Mono', 'SF Mono', Consolas, monospace;
+    font-size: 12px;
+    line-height: 1.7;
+    color: var(--text-dim);
+    max-height: 220px;
+    overflow-y: auto;
+    display: none;
+    margin-bottom: 16px;
+    white-space: pre-wrap;
+  }
+  .log-console.active { display: block; }
+  .log-console .ok { color: var(--accent); }
+  .log-console .err { color: var(--danger); }
+
+  .diff-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 13px;
+    margin-bottom: 16px;
+    display: none;
+  }
+  .diff-table.active { display: table; }
+  .diff-table th, .diff-table td {
+    text-align: left;
+    padding: 8px 10px;
+    border-bottom: 1px solid var(--border);
+  }
+  .diff-table th {
+    color: var(--text-dim);
+    font-weight: 500;
+    font-size: 12px;
+  }
+  .diff-table td.num { font-family: 'JetBrains Mono', monospace; color: var(--accent); }
+  .diff-table td.num.neg { color: var(--danger); }
+
+  .db-actions {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+    flex-wrap: wrap;
+  }
+
+  button.btn:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+  }
 </style>
 </head>
 <body>
 
-<!-- ========== BUILDER SCREEN ========== -->
-<div id="builder-screen" class="screen active">
-  <!-- Search panel -->
-  <div class="search-panel">
-    <div class="panel-head">
-      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;"><h2 style="margin:0;">⬡ カード検索</h2><button onclick="openSettings()" style="background:var(--bg3);border:1px solid var(--border);color:var(--text2);border-radius:5px;padding:3px 8px;cursor:pointer;font-size:11px;">⚙️</button></div>
-      <input class="search-input" id="search-input" placeholder="カード名（日本語・英語）例: シャイングレイモン / Agumon" autocomplete="off">
-      <div class="search-hint">※ 登録済みカードは日本語で検索可。未登録は英語で検索</div>
-      <div style="margin-top:8px;border-top:1px solid var(--border);padding-top:8px;">
-        <div style="font-size:10px;color:var(--accent2);margin-bottom:5px;">📄 PDFからカード登録</div>
-        <label style="display:block;background:var(--bg3);border:1px dashed var(--border2);border-radius:6px;padding:7px;text-align:center;cursor:pointer;font-size:11px;color:var(--text2);">
-          PDFをここにドロップ or クリック
-          <input type="file" id="pdf-upload" accept=".pdf" style="display:none">
-        </label>
-        <div id="pdf-status" style="font-size:10px;color:var(--text2);margin-top:4px;"></div>
-      </div>
-    </div>
-    <div class="search-results" id="search-results">
-      <div class="search-loading">カード名を入力して検索</div>
-    </div>
+<header>
+  <div class="brand">
+    <span class="dot"></span>
+    <h1 class="mono">DIGICA TOOL</h1>
   </div>
+  <div class="status-readout mono">
+    <span>DB: <span class="val" id="statDbCount">未取得</span></span>
+    <span>更新: <span class="val" id="statDbUpdated">--</span></span>
+  </div>
+  <div class="header-actions">
+    <button class="db-admin-btn mono" id="openDbTab" title="カードデータベースの更新(たまに使う管理機能)">DB管理</button>
+    <button class="settings-btn" id="openSettings">⚙ 設定</button>
+  </div>
+</header>
 
-  <!-- Deck panel -->
-  <div class="deck-panel">
-    <div class="deck-panel-head">
-      <h2>デッキ構築</h2>
-      <div class="deck-tabs">
-        <button class="deck-tab active" onclick="switchTab('main')">メイン <span id="main-tab-count">0</span>/50</button>
-        <button class="deck-tab" onclick="switchTab('egg')">育成 <span id="egg-tab-count">0</span>/5</button>
-      </div>
-      <button class="btn-start" id="start-btn" onclick="startGame()" disabled>▶ 練習開始</button>
+<nav class="tabs">
+  <button class="tab-btn active" data-tab="search">🔍 カード検索</button>
+  <button class="tab-btn" data-tab="deck">🃏 デッキ構築</button>
+</nav>
+
+<main>
+  <section id="tab-search" class="tab-panel">
+    <div class="panel placeholder">
+      <span class="phase-tag">PHASE 2 未実装</span><br>
+      カード検索はここに実装予定です。<br>
+      現在は Phase 1(DB管理タブでのDB構築)から着手中です。
     </div>
-    <div class="deck-body">
-      <div id="deck-main-view">
-        <div class="deck-section">
-          <div class="deck-section-label">メインデッキ</div>
-          <div class="deck-cards" id="deck-main-cards">
-            <div class="deck-empty">← 左のパネルからカードを追加</div>
-          </div>
+  </section>
+
+  <section id="tab-deck" class="tab-panel" style="display:none;">
+    <div class="panel placeholder">
+      <span class="phase-tag">PHASE 3 未実装</span><br>
+      デッキ構築・保存はここに実装予定です。
+    </div>
+  </section>
+
+  <section id="tab-db" class="tab-panel" style="display:none;">
+    <div class="panel">
+      <div class="db-section">
+        <h3>現在のデータベース</h3>
+        <div class="db-current mono">
+          <span class="kv">枚数: <span class="v" id="dbCurrentCount">--</span></span>
+          <span class="kv">最終更新: <span class="v" id="dbCurrentUpdated">--</span></span>
+          <span class="kv">データ元更新日: <span class="v" id="dbCurrentSourceDate">--</span></span>
         </div>
       </div>
-      <div id="deck-egg-view" style="display:none">
-        <div class="deck-section">
-          <div class="deck-section-label">育成デッキ（タマゴ）</div>
-          <div class="deck-cards" id="deck-egg-cards">
-            <div class="deck-empty">← 左のパネルからカードを追加</div>
-          </div>
+
+      <div class="db-section">
+        <h3>DB更新(heroi.ccから日本語カードデータを取得)</h3>
+        <p class="placeholder" style="margin-top:0;">
+          新しいパックが発売されたときに実行してください。処理はブラウザ内で完結し、確認後にGitHubへコミットします。
+        </p>
+
+        <div class="db-actions">
+          <button class="btn primary" id="startDbUpdate">DB更新を開始</button>
+          <button class="btn" id="commitDb" style="display:none;">この内容でコミット</button>
         </div>
-      </div>
-    </div>
-    <div class="count-bar">
-      <span>メイン: <span id="count-main">0</span>/50</span>
-      <span>育成: <span id="count-egg">0</span>/5</span>
-      <span id="count-status">カードを追加してください</span>
-    </div>
-  </div>
-</div>
 
-<!-- ========== GAME SCREEN ========== -->
-<div id="game-screen" class="screen">
-  <div class="game-topbar">
-    <span class="game-title">⬡ デジカ ソロ練習</span>
-    <button class="g-btn" onclick="drawCard()">ドロー</button>
-    <button class="g-btn" onclick="shuffleMainDeck()">シャッフル</button>
-    <button class="g-btn primary" onclick="showTrashModal()">トラッシュ確認</button>
-    <button class="g-btn" onclick="backToBuilder()">← デッキ編集</button>
-  </div>
-
-  <div class="game-field">
-    <!-- Left col: 育成デッキ + 育成エリア -->
-    <div class="left-col">
-      <div class="zone deck-stack" onclick="drawEgg()" title="クリックで育成エリアへ">
-        <span class="zone-label">育成デッキ</span>
-        <div class="deck-stack-count" id="g-egg-deck-count">0</div>
-        <div class="deck-stack-sub">枚　クリックで引く</div>
-      </div>
-      <div class="zone ikusei-field">
-        <span class="zone-label">育成エリア</span>
-        <div class="field-drop" id="g-ikusei-area"
-          ondragover="onDragOver(event)"
-          ondrop="onDrop(event,'ikusei')">
+        <div class="progress-track" id="progressTrack">
+          <div class="progress-fill" id="progressFill"></div>
         </div>
+
+        <div class="log-console mono" id="logConsole"></div>
+
+        <table class="diff-table" id="diffTable">
+          <thead>
+            <tr><th></th><th>現在</th><th>更新後</th><th>差分</th></tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>収録枚数</td>
+              <td class="num" id="diffOldCount">--</td>
+              <td class="num" id="diffNewCount">--</td>
+              <td class="num" id="diffDelta">--</td>
+            </tr>
+          </tbody>
+        </table>
       </div>
     </div>
+  </section>
+</main>
 
-    <!-- Center: battle -->
-    <div class="center-col">
-      <div class="zone battle-zone">
-        <span class="zone-label">バトルエリア</span>
-        <div class="field-drop" id="g-battle-area"
-          ondragover="onDragOver(event)"
-          ondrop="onDrop(event,'battle')">
-        </div>
-      </div>
-    </div>
+<footer>
+  Card data provided by <a href="https://heroi.cc" target="_blank" rel="noopener">Heroicc</a> under CC BY-NC-SA 4.0.
+  Card imagery &amp; text © Akiyoshi Hongo, Toei Animation © BANDAI.
+</footer>
 
-    <!-- Right col: メインデッキ + セキュリティ + トラッシュ -->
-    <div class="right-col">
-      <div class="zone deck-stack" onclick="drawCard()" title="クリックでドロー">
-        <span class="zone-label">メインデッキ</span>
-        <div class="deck-stack-count" id="g-main-deck-count">0</div>
-        <div class="deck-stack-sub">枚　クリックでドロー</div>
-      </div>
-      <div class="zone security-zone">
-        <span class="zone-label">セキュリティ <span id="g-sec-count">0</span>枚</span>
-        <div class="security-pips" id="g-sec-pips"></div>
-      </div>
-      <div class="zone trash-zone" onclick="showTrashModal()">
-        <span class="zone-label">トラッシュ <span id="g-trash-count">0</span>枚</span>
-        <div id="g-trash-top"></div>
-      </div>
-    </div>
-
-    <!-- Hand -->
-    <div class="zone hand-area">
-      <span class="zone-label">手札 <span id="g-hand-count">0</span>枚</span>
-      <div class="hand-cards" id="g-hand-area"></div>
-    </div>
-  </div>
-
-  <div class="game-log" id="game-log">ゲーム開始</div>
-</div>
-
-<!-- Trash modal -->
-<div class="modal-overlay" id="trash-modal">
+<!-- Settings Modal -->
+<div class="modal-backdrop" id="settingsModal">
   <div class="modal">
-    <h3>🗑 トラッシュ一覧</h3>
-    <div class="modal-cards" id="trash-modal-cards"></div>
-    <button class="modal-close" onclick="closeModal('trash-modal')">閉じる</button>
-  </div>
-</div>
-
-<!-- Card detail overlay -->
-<div class="card-detail-overlay" id="card-detail-overlay" onclick="closeCardDetail()">
-  <div class="card-detail" onclick="event.stopPropagation()">
-    <div style="display:flex;flex-direction:column;gap:6px;flex-shrink:0;">
-      <div id="cd-img" style="width:120px;height:168px;border-radius:6px;overflow:hidden;display:flex;flex-direction:column;cursor:pointer;" title="クリックで画像を差し替え" onclick="replaceCardImage()"></div>
-      <button onclick="openCardEdit()" style="background:var(--accent);border:none;color:#fff;border-radius:5px;padding:5px;cursor:pointer;font-size:11px;width:120px;">✏️ 編集</button>
-      <button onclick="openGitHubDb()" style="background:var(--bg3);border:1px solid var(--border);color:var(--text2);border-radius:5px;padding:5px;cursor:pointer;font-size:10px;width:120px;">GitHub編集</button>
+    <h2 class="mono">⚙ 設定</h2>
+    <div class="field">
+      <label for="ghToken">GitHub Personal Access Token</label>
+      <input type="password" id="ghToken" placeholder="ghp_xxxxxxxxxxxx" autocomplete="off">
+      <div class="hint">db.json / decks.json の読み書きに使用します。ブラウザのlocalStorageに保存され、外部には送信されません。</div>
     </div>
-    <div class="card-detail-info">
-      <div class="cd-name" id="cd-name"></div>
-      <div class="cd-id" id="cd-id"></div>
-      <div class="cd-stats" id="cd-stats"></div>
-      <div class="cd-effect" id="cd-effect"></div>
+    <div class="field">
+      <label for="ghRepo">リポジトリ(owner/repo)</label>
+      <input type="text" id="ghRepo" placeholder="KaboTea/digica-tool" autocomplete="off">
     </div>
-    <button class="cd-close" onclick="closeCardDetail()">✕</button>
-  </div>
-</div>
-
-<!-- 用語辞書エディタ -->
-<div class="modal-overlay" id="terms-modal">
-  <div class="modal" style="width:480px;max-height:85vh;">
-    <h3>📖 用語辞書</h3>
-    <div style="font-size:10px;color:var(--text2);margin-bottom:8px;">英語 → 日本語の対応を編集できます。PDFカード登録時の翻訳に使用されます。</div>
-    <textarea id="terms-editor" rows="16" style="width:100%;background:var(--bg3);border:1px solid var(--border2);color:var(--text);border-radius:5px;padding:8px;font-size:11px;outline:none;resize:vertical;font-family:monospace;line-height:1.6;"></textarea>
-    <div id="terms-status" style="font-size:10px;color:var(--text2);min-height:14px;margin-top:4px;"></div>
-    <div style="display:flex;gap:8px;margin-top:8px;">
-      <button onclick="saveTerms()" style="flex:1;background:var(--green);border:none;color:#fff;border-radius:6px;padding:8px;cursor:pointer;font-size:13px;font-weight:bold;">💾 GitHubに保存</button>
-      <button onclick="closeModal('terms-modal')" style="background:var(--bg3);border:1px solid var(--border);color:var(--text2);border-radius:6px;padding:8px 14px;cursor:pointer;font-size:12px;">閉じる</button>
+    <div class="modal-actions">
+      <span class="save-msg" id="saveMsg">保存しました</span>
+      <button class="btn" id="closeSettings">閉じる</button>
+      <button class="btn primary" id="saveSettings">保存</button>
     </div>
   </div>
 </div>
-
-<!-- カード編集モーダル -->
-<div class="modal-overlay" id="edit-modal">
-  <div class="modal" style="width:460px;max-height:85vh;">
-    <h3>✏️ カード編集</h3>
-    <div style="display:flex;flex-direction:column;gap:8px;margin-top:8px;">
-      <div style="display:flex;gap:10px;">
-        <!-- 左: 画像 -->
-        <div style="flex-shrink:0;">
-          <div id="edit-img-preview" style="width:80px;height:112px;border-radius:5px;overflow:hidden;border:1px solid var(--border);cursor:pointer;display:flex;align-items:center;justify-content:center;background:var(--bg3);font-size:10px;color:var(--text2);" onclick="document.getElementById('edit-img-input').click()">
-            画像変更
-          </div>
-          <input type="file" id="edit-img-input" accept="image/*" style="display:none">
-        </div>
-        <!-- 右: フィールド -->
-        <div style="flex:1;display:flex;flex-direction:column;gap:5px;">
-          <div style="display:flex;gap:5px;">
-            <div style="flex:1;">
-              <div style="font-size:10px;color:var(--accent2);margin-bottom:2px;">カードID</div>
-              <input id="edit-id" style="width:100%;background:var(--bg3);border:1px solid var(--border);color:var(--text);border-radius:4px;padding:4px 7px;font-size:11px;outline:none;" readonly>
-            </div>
-            <div style="flex:1;">
-              <div style="font-size:10px;color:var(--accent2);margin-bottom:2px;">カード名</div>
-              <input id="edit-name" style="width:100%;background:var(--bg3);border:1px solid var(--border2);color:var(--text);border-radius:4px;padding:4px 7px;font-size:11px;outline:none;">
-            </div>
-          </div>
-          <div style="display:flex;gap:5px;">
-            <div style="flex:1;">
-              <div style="font-size:10px;color:var(--accent2);margin-bottom:2px;">タイプ</div>
-              <select id="edit-type" style="width:100%;background:var(--bg3);border:1px solid var(--border2);color:var(--text);border-radius:4px;padding:4px 7px;font-size:11px;outline:none;">
-                <option>DIGITAMA</option>
-                <option>DIGIMON</option>
-                <option>TAMER</option>
-                <option>OPTION</option>
-              </select>
-            </div>
-            <div style="flex:1;">
-              <div style="font-size:10px;color:var(--accent2);margin-bottom:2px;">レベル</div>
-              <input id="edit-level" type="number" style="width:100%;background:var(--bg3);border:1px solid var(--border2);color:var(--text);border-radius:4px;padding:4px 7px;font-size:11px;outline:none;">
-            </div>
-          </div>
-          <div style="display:flex;gap:5px;">
-            <div style="flex:1;">
-              <div style="font-size:10px;color:var(--accent2);margin-bottom:2px;">色1</div>
-              <select id="edit-color" style="width:100%;background:var(--bg3);border:1px solid var(--border2);color:var(--text);border-radius:4px;padding:4px 7px;font-size:11px;outline:none;">
-                <option value="">—</option>
-                <option>Red</option><option>Blue</option><option>Yellow</option>
-                <option>Green</option><option>Black</option><option>Purple</option><option>White</option>
-              </select>
-            </div>
-            <div style="flex:1;">
-              <div style="font-size:10px;color:var(--accent2);margin-bottom:2px;">色2</div>
-              <select id="edit-color2" style="width:100%;background:var(--bg3);border:1px solid var(--border2);color:var(--text);border-radius:4px;padding:4px 7px;font-size:11px;outline:none;">
-                <option value="">—</option>
-                <option>Red</option><option>Blue</option><option>Yellow</option>
-                <option>Green</option><option>Black</option><option>Purple</option><option>White</option>
-              </select>
-            </div>
-          </div>
-          <div style="display:flex;gap:5px;">
-            <div style="flex:1;">
-              <div style="font-size:10px;color:var(--accent2);margin-bottom:2px;">コスト</div>
-              <input id="edit-cost" type="number" style="width:100%;background:var(--bg3);border:1px solid var(--border2);color:var(--text);border-radius:4px;padding:4px 7px;font-size:11px;outline:none;">
-            </div>
-            <div style="flex:1;">
-              <div style="font-size:10px;color:var(--accent2);margin-bottom:2px;">DP</div>
-              <input id="edit-dp" type="number" style="width:100%;background:var(--bg3);border:1px solid var(--border2);color:var(--text);border-radius:4px;padding:4px 7px;font-size:11px;outline:none;">
-            </div>
-          </div>
-        </div>
-      </div>
-      <div>
-        <div style="font-size:10px;color:var(--accent2);margin-bottom:2px;">特徴</div>
-        <input id="edit-trait" style="width:100%;background:var(--bg3);border:1px solid var(--border2);color:var(--text);border-radius:4px;padding:4px 7px;font-size:11px;outline:none;">
-      </div>
-      <div>
-        <div style="font-size:10px;color:var(--accent2);margin-bottom:2px;">効果テキスト</div>
-        <textarea id="edit-effect" rows="4" style="width:100%;background:var(--bg3);border:1px solid var(--border2);color:var(--text);border-radius:4px;padding:5px 7px;font-size:11px;outline:none;resize:vertical;line-height:1.5;"></textarea>
-      </div>
-      <div>
-        <div style="font-size:10px;color:var(--accent2);margin-bottom:2px;">進化元効果</div>
-        <textarea id="edit-source-effect" rows="2" style="width:100%;background:var(--bg3);border:1px solid var(--border2);color:var(--text);border-radius:4px;padding:5px 7px;font-size:11px;outline:none;resize:vertical;line-height:1.5;"></textarea>
-      </div>
-      <div id="edit-status" style="font-size:11px;color:var(--text2);min-height:14px;"></div>
-      <div style="display:flex;gap:8px;">
-        <button onclick="saveCardEdit()" style="flex:1;background:var(--green);border:none;color:#fff;border-radius:6px;padding:8px;cursor:pointer;font-size:13px;font-weight:bold;">💾 保存</button>
-        <button onclick="closeModal('edit-modal')" style="background:var(--bg3);border:1px solid var(--border);color:var(--text2);border-radius:6px;padding:8px 14px;cursor:pointer;font-size:12px;">キャンセル</button>
-      </div>
-    </div>
-  </div>
-</div>
-
-<!-- Context menu -->
-<div class="ctx" id="ctx"></div>
 
 <script>
-// ============================================================
-// CARD DB（IndexedDB経由で永続保存）
-// ============================================================
-const DB_NAME = 'DigiCardDB';
-const DB_VER  = 1;
-const STORE   = 'cards';
-let db = null;
-
-function openDB() {
-  return new Promise((resolve, reject) => {
-    if (db) { resolve(db); return; }
-    const req = indexedDB.open(DB_NAME, DB_VER);
-    req.onupgradeneeded = e => {
-      const d = e.target.result;
-      if (!d.objectStoreNames.contains(STORE)) {
-        d.createObjectStore(STORE, { keyPath: 'id' });
-      }
-    };
-    req.onsuccess = e => { db = e.target.result; resolve(db); };
-    req.onerror   = e => reject(e);
-  });
-}
-async function dbGet(id) {
-  const d = await openDB();
-  return new Promise((res, rej) => {
-    const tx = d.transaction(STORE, 'readonly');
-    const req = tx.objectStore(STORE).get(id);
-    req.onsuccess = () => res(req.result || null);
-    req.onerror   = () => res(null);
-  });
-}
-async function dbPut(card) {
-  const d = await openDB();
-  return new Promise((res, rej) => {
-    const tx = d.transaction(STORE, 'readwrite');
-    tx.objectStore(STORE).put(card);
-    tx.oncomplete = () => res();
-    tx.onerror    = () => rej();
-  });
-}
-async function dbGetAll() {
-  const d = await openDB();
-  return new Promise((res) => {
-    const tx = d.transaction(STORE, 'readonly');
-    const req = tx.objectStore(STORE).getAll();
-    req.onsuccess = () => res(req.result || []);
-    req.onerror   = () => res([]);
-  });
-}
-
-// PDF処理用ワーカー変数
-let pdfProcessing = false;
-
-// ============================================================
-// DATA
-// ============================================================
-let deckMain = [];   // [{cardData, count}]
-let deckEgg  = [];
-let activeTab = 'main';
-
-let gState = {
-  mainDeck: [],
-  eggDeck: [],
-  hand: [],
-  security: [],
-  trash: [],
-  battle: [],
-  ikusei: [],
-};
-let uid = 0;
-const newUid = () => ++uid;
-
-// カラーパレット
-const COLOR_HEX = {
-  Red:'#c0302a', Blue:'#2060c0', Yellow:'#c0a010',
-  Green:'#208040', Black:'#303030', Purple:'#6030a0',
-  White:'#909090', Colorless:'#505060'
-};
-const COLOR_JA = { Red:'赤', Blue:'青', Yellow:'黄', Green:'緑', Black:'黒', Purple:'紫', White:'白', Colorless:'無色' };
-const TYPE_JA  = { Digimon:'デジモン', 'Digi-Egg':'タマゴ', Tamer:'テイマー', Option:'オプション' };
-function jaType(v)  { return TYPE_JA[v]  || v || ''; }
-function jaColor(v) { return COLOR_JA[v] || v || ''; }
-function colorHex(v) { return COLOR_HEX[v] || '#404040'; }
-
-// カード種別ラベル: D・Lv6 / T / O / DA・Lv7 / DO・Lv6
-function cardTypeLabel(card) {
-  const lv = card.level ? `・Lv${card.level}` : '';
-  const t = card.type || '';
-  const alt = card.alt_effect || '';
-  const isAce = (card.name || '').includes('Ace') || (card.main_effect||'').includes('ACE') || (card.digi_type||'').includes('Ace');
-  // Dual card: Digimonかつオプション効果あり（alt_effectあり）
-  if (t === 'Digimon' && alt && alt.length > 5) return `DO${lv}`;
-  if (t === 'Digimon' && isAce) return `DA${lv}`;
-  if (t === 'Digimon') return `D${lv}`;
-  if (t === 'Tamer')   return 'T';
-  if (t === 'Option')  return 'O';
-  if (t === 'Digi-Egg') return `D${lv}`;
-  return t;
-}
-
-// コストラベル: C12 など
-function cardCostLabel(card) {
-  const t = card.type || '';
-  const alt = card.alt_effect || '';
-  // デュアルカード → オプション側コスト = play_cost
-  if (t === 'Digimon' && alt && alt.length > 5) {
-    return card.play_cost != null ? `C${card.play_cost}` : '';
-  }
-  if (t === 'Digimon') {
-    return card.play_cost != null ? `C${card.play_cost}` : '';
-  }
-  if (t === 'Tamer' || t === 'Option') {
-    return card.play_cost != null ? `C${card.play_cost}` : '';
-  }
-  return '';
-}
-
-// カードフェイスHTML（色帯＋テキスト）
-function cardFaceHtml(card) {
-  const colors = [card.color, card.color2, card.color3].filter(Boolean);
-  const segs = colors.length > 0 ? colors : ['Colorless'];
-  const segHtml = segs.map(c =>
-    `<div class="g-card-color-seg" style="background:${colorHex(c)}"></div>`
-  ).join('');
-  const typeLabel = cardTypeLabel(card);
-  const costLabel = cardCostLabel(card);
-  return `
-    <div class="g-card-color">${segHtml}</div>
-    <div class="g-card-info">
-      <div class="g-card-type">${typeLabel}</div>
-      ${costLabel ? `<div class="g-card-cost">${costLabel}</div>` : ''}
-      <div class="g-card-name">${card.name || ''}</div>
-    </div>`;
-}
-
-function jaLabel(card) {
-  const parts = [];
-  if (card.type)  parts.push(jaType(card.type));
-  const colors = [card.color, card.color2].filter(Boolean);
-  if (colors.length) parts.push(colors.map(jaColor).join('/'));
-  if (card.level != null) parts.push(`Lv.${card.level}`);
-  if (card.dp    != null) parts.push(`${Number(card.dp).toLocaleString()}DP`);
-  return parts.join(' · ') || '—';
-}
-
-// 検索結果のカード名表示: 日本語優先
-function displayName(card) {
-  return card.name || card.name_en || '';
-}
-
-// ============================================================
-// SEARCH
-// ============================================================
-let searchTimer = null;
-document.getElementById('search-input').addEventListener('input', function() {
-  clearTimeout(searchTimer);
-  const q = this.value.trim();
-  if (q.length < 2) {
-    document.getElementById('search-results').innerHTML = '<div class="search-loading">2文字以上入力してください</div>';
-    return;
-  }
-  document.getElementById('search-results').innerHTML = '<div class="search-loading">検索中…</div>';
-  searchTimer = setTimeout(() => searchCards(q), 400);
-});
-
-// ローカルDB検索（日本語名・英語名・カードID対応）
-function searchLocalDb(q) {
-  if (!cardDbCache) return [];
-  const lower = q.toLowerCase();
-  return Object.values(cardDbCache).filter(card => {
-    return (card.name       && card.name.includes(q))       // 日本語名
-        || (card.name_en    && card.name_en.toLowerCase().includes(lower)) // 英語名
-        || (card.id         && card.id.toLowerCase().includes(lower));     // カードID
-  }).slice(0, 20);
-}
-
-async function searchCards(q) {
-  // DBが未ロードなら先にロード
-  if (!cardDbCache) {
-    document.getElementById('search-results').innerHTML = '<div class="search-loading">DBロード中…</div>';
-    await loadCardDb();
-  }
-  // まずローカルDBを検索
-  const localResults = searchLocalDb(q);
-  if (localResults.length > 0) {
-    renderSearchResults(localResults, true);
-    return;
-  }
-  // ローカルにヒットしなければallorigins経由でAPI検索
-  try {
-    document.getElementById('search-results').innerHTML = '<div class="search-loading">API検索中…</div>';
-    const target = `https://digimoncard.io/api-public/search.php?n=${encodeURIComponent(q)}&series=Digimon+Card+Game&sort=id&sortdirection=ASC&num=20`;
-    const url = `https://api.allorigins.win/get?url=${encodeURIComponent(target)}`;
-    const res = await fetch(url);
-    if (!res.ok) throw new Error('API error');
-    const wrapper = await res.json();
-    const data = JSON.parse(wrapper.contents);
-    const seen = new Set();
-    const unique = data.filter(c => {
-      if (seen.has(c.id)) return false;
-      seen.add(c.id);
-      return true;
-    });
-    renderSearchResults(unique, false);
-  } catch(e) {
-    document.getElementById('search-results').innerHTML = '<div class="search-loading">検索失敗。未登録カードは英語名で検索してください</div>';
-  }
-}
-
-function renderSearchResults(cards, fromLocal=false) {
-  const el = document.getElementById('search-results');
-  if (!cards.length) { el.innerHTML = '<div class="search-loading">該当なし</div>'; return; }
-  el.innerHTML = '';
-  if (fromLocal) {
-    const badge = document.createElement('div');
-    badge.style.cssText = 'font-size:10px;color:var(--green);padding:4px 6px;';
-    badge.textContent = `✓ ローカルDB（${cards.length}件）`;
-    el.appendChild(badge);
-  }
-  cards.forEach(card => {
-    const div = document.createElement('div');
-    div.className = 'result-card';
-    // サムネイル: DB画像があれば使う（毎回計算）
-    const ghUrl = card.imageB64
-      ? `data:image/jpeg;base64,${card.imageB64}`
-      : ghImgUrl(card.id);
-    const thumbHtml = ghUrl
-      ? `<img src="${ghUrl}" class="result-thumb" style="object-fit:cover;" onerror="this.style.background='#1a2a44'">`
-      : `<div class="result-thumb">${(() => { const segs=[card.color,card.color2].filter(Boolean); return (segs.length?segs:['Colorless']).map(c=>`<div style="flex:1;background:${colorHex(c)}"></div>`).join(''); })()}</div>`;
-    const subName = card.name && card.name_en && card.name !== card.name_en ? `<div style="font-size:9px;color:var(--text2);">${card.name_en}</div>` : '';
-    div.innerHTML = `
-      ${thumbHtml}
-      <div class="result-info">
-        <div class="result-name">${card.name || card.name_en || ''}</div>
-        ${subName}
-        <div class="result-id">${card.id}</div>
-        <div class="result-meta">${jaLabel(card)}</div>
-        <button class="result-add-btn" onclick="addToDeck(event)">+ デッキに追加</button>
-      </div>`;
-    // ghImgUrlをcard objectに付与
-    const cardWithImg = {...card, ghImgUrl: ghUrl};
-    div.dataset.card = JSON.stringify(cardWithImg);
-    div.querySelector('.result-add-btn').dataset.card = JSON.stringify(cardWithImg);
-    div.addEventListener('click', e => {
-      if (e.target.classList.contains('result-add-btn')) return;
-      showCardDetail(cardWithImg);
-    });
-    el.appendChild(div);
-  });
-}
-
-function addToDeck(e) {
-  e.stopPropagation();
-  const card = JSON.parse(e.target.dataset.card);
-  const isEgg = card.type === 'Digi-Egg';
-  const target = isEgg ? deckEgg : deckMain;
-  const limit = isEgg ? 5 : 50;
-  const perCard = 4;
-  const total = target.reduce((s, c) => s + c.count, 0);
-  const existing = target.find(c => c.id === card.id);
-  if (existing) {
-    if (existing.count >= perCard) { showLog(`${card.name} は既に${perCard}枚入っています`); return; }
-    existing.count++;
-  } else {
-    if (total >= limit) { showLog(`${isEgg ? '育成' : 'メイン'}デッキが上限（${limit}枚）です`); return; }
-    // DBとGitHub画像をマージ
-  (async () => {
-    const db = await loadCardDb();
-    const dbEntry = db[card.id];
-    const cached = await dbGet(card.id);
-    // GitHub画像URLを設定
-    const ghUrl = ghImgUrl(card.id);
-    const merged = {
-      ...card,
-      ...(dbEntry || {}),
-      ...(cached || {}),
-      id: card.id,
-      ghImgUrl: ghUrl,
-    };
-    // ローカルキャッシュになければ追加
-    if (!cached && dbEntry) {
-      dbEntry.ghImgUrl = ghUrl;
-      await dbPut(dbEntry);
-    }
-    target.push({ id: card.id, name: card.name, count: 1, cardData: merged });
-    renderDeckList();
-  })();
-  return;
-  }
-  // switch to correct tab
-  if (isEgg && activeTab !== 'egg') switchTab('egg');
-  if (!isEgg && activeTab !== 'main') switchTab('main');
-  renderDeckList();
-  showLog(`追加: ${card.name} (${card.id})`);
-}
-
-// ============================================================
-// DECK LIST
-// ============================================================
-function switchTab(tab) {
-  activeTab = tab;
-  document.querySelectorAll('.deck-tab').forEach((t, i) => {
-    t.classList.toggle('active', (i === 0 && tab === 'main') || (i === 1 && tab === 'egg'));
-  });
-  document.getElementById('deck-main-view').style.display = tab === 'main' ? '' : 'none';
-  document.getElementById('deck-egg-view').style.display  = tab === 'egg'  ? '' : 'none';
-}
-
-function renderDeckList() {
-  renderDeckSection(deckMain, 'deck-main-cards', 'main');
-  renderDeckSection(deckEgg,  'deck-egg-cards',  'egg');
-  const mc = deckMain.reduce((s, c) => s + c.count, 0);
-  const ec = deckEgg.reduce((s, c)  => s + c.count, 0);
-  document.getElementById('count-main').textContent = mc;
-  document.getElementById('count-egg').textContent  = ec;
-  document.getElementById('main-tab-count').textContent = mc;
-  document.getElementById('egg-tab-count').textContent  = ec;
-  const ok = mc === 50;
-  document.getElementById('count-status').textContent = ok ? '✓ 準備完了！' : `メイン ${50 - mc}枚不足`;
-  document.getElementById('count-status').style.color = ok ? 'var(--green)' : 'var(--text2)';
-  document.getElementById('start-btn').disabled = mc === 0;
-}
-
-function renderDeckSection(deck, elId, which) {
-  const el = document.getElementById(elId);
-  if (!deck.length) { el.innerHTML = `<div class="deck-empty">← 左のパネルからカードを追加</div>`; return; }
-  el.innerHTML = '';
-  deck.forEach(entry => {
-    const div = document.createElement('div');
-    div.className = 'deck-card-item';
-    const deckImgSrc = entry.cardData.imageB64
-      ? `data:image/jpeg;base64,${entry.cardData.imageB64}`
-      : (entry.cardData.ghImgUrl || null);
-    const deckFaceSegs = [entry.cardData.color, entry.cardData.color2].filter(Boolean);
-    const deckFaceCols = (deckFaceSegs.length ? deckFaceSegs : ['Colorless']).map(c => `<div style="flex:1;background:${colorHex(c)}"></div>`).join('');
-    const deckFaceHtml = deckImgSrc
-      ? `<img src="${deckImgSrc}" style="width:100%;height:100%;object-fit:cover;display:block;">`
-      : `<div style="flex:1;display:flex;">${deckFaceCols}</div><div style="background:rgba(0,0,0,0.75);padding:2px 3px;"><div style="font-size:8px;color:#aac8ff;">${cardTypeLabel(entry.cardData)}</div><div style="font-size:7px;color:#e8eeff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${entry.name}</div></div>`;
-    div.innerHTML = `
-      <div style="width:60px;height:84px;display:flex;flex-direction:column;border-radius:4px;border:1px solid var(--border);overflow:hidden;cursor:pointer;" title="${entry.name}&#10;${entry.id}">${deckFaceHtml}</div>
-      <div class="deck-card-count">${entry.count}</div>
-      <button class="deck-card-remove" onclick="removeFromDeck('${which}','${entry.id}')">−</button>`;
-    div.querySelector('div').addEventListener('click', () => showCardDetail(entry.cardData));
-    el.appendChild(div);
-  });
-}
-
-function removeFromDeck(which, id) {
-  const target = which === 'egg' ? deckEgg : deckMain;
-  const idx = target.findIndex(c => c.id === id);
-  if (idx < 0) return;
-  target[idx].count--;
-  if (target[idx].count <= 0) target.splice(idx, 1);
-  renderDeckList();
-}
-
-// ============================================================
-// GAME START
-// ============================================================
-function startGame() {
-  // build flat arrays
-  const main = [];
-  deckMain.forEach(e => { for (let i = 0; i < e.count; i++) main.push({ uid: newUid(), ...e.cardData }); });
-  const egg = [];
-  deckEgg.forEach(e => { for (let i = 0; i < e.count; i++) egg.push({ uid: newUid(), ...e.cardData }); });
-
-  gState.mainDeck = shuffle(main);
-  gState.eggDeck  = shuffle(egg);
-  gState.hand     = [];
-  gState.security = gState.mainDeck.splice(0, 5);
-  gState.hand     = gState.mainDeck.splice(0, 5);
-  gState.trash    = [];
-  gState.battle   = [];
-  gState.ikusei   = [];
-
-  document.getElementById('builder-screen').classList.remove('active');
-  document.getElementById('game-screen').classList.add('active');
-  renderGame();
-  showLog('ゲーム開始 — セキュリティ5枚・手札5枚セット');
-}
-
-function backToBuilder() {
-  document.getElementById('game-screen').classList.remove('active');
-  document.getElementById('builder-screen').classList.add('active');
-}
-
-// ============================================================
-// GAME RENDER
-// ============================================================
-function renderGame() {
-  document.getElementById('g-main-deck-count').textContent = gState.mainDeck.length;
-  document.getElementById('g-egg-deck-count').textContent  = gState.eggDeck.length;
-  document.getElementById('g-hand-count').textContent      = gState.hand.length;
-  document.getElementById('g-sec-count').textContent       = gState.security.length;
-  document.getElementById('g-trash-count').textContent     = gState.trash.length;
-  renderHand();
-  renderSecurity();
-  renderTrashTop();
-  renderFieldArea('g-battle-area', gState.battle);
-  renderFieldArea('g-ikusei-area', gState.ikusei);
-}
-
-function renderHand() {
-  document.getElementById('g-hand-count').textContent = gState.hand.length;
-  const el = document.getElementById('g-hand-area');
-  el.innerHTML = '';
-  gState.hand.forEach(card => el.appendChild(makeGameCard(card, 'hand')));
-}
-
-function renderSecurity() {
-  document.getElementById('g-sec-count').textContent = gState.security.length;
-  const el = document.getElementById('g-sec-pips');
-  el.innerHTML = '';
-  gState.security.forEach((card, i) => {
-    const pip = document.createElement('div');
-    pip.className = 'sec-pip';
-    pip.title = 'クリックで破壊→トラッシュ';
-    pip.onclick = () => {
-      const removed = gState.security.splice(i, 1)[0];
-      gState.trash.push(removed);
-      renderSecurity();
-      renderTrashTop();
-      showLog(`セキュリティ破壊: ${removed.name}`);
-    };
-    el.appendChild(pip);
-  });
-}
-
-function renderTrashTop() {
-  document.getElementById('g-trash-count').textContent = gState.trash.length;
-  const el = document.getElementById('g-trash-top');
-  if (!gState.trash.length) { el.innerHTML = '<div class="trash-placeholder">空</div>'; return; }
-  const top = gState.trash[gState.trash.length - 1];
-  el.innerHTML = `<div class="g-card-face" style="width:80px;height:112px;cursor:pointer;" onclick="showTrashModal()" title="${top.name}">${cardFaceHtml(top)}</div>`;
-}
-
-function renderFieldArea(elId, arr) {
-  const el = document.getElementById(elId);
-  el.innerHTML = '';
-  arr.forEach(card => el.appendChild(makeGameCard(card, elId.includes('battle') ? 'battle' : 'ikusei')));
-}
-
-// ============================================================
-// GAME CARD ELEMENT
-// ============================================================
-function makeGameCard(card, zone) {
-  const div = document.createElement('div');
-  div.className = 'g-card' + (card.tapped ? ' tapped' : '');
-  div.draggable = true;
-  div.dataset.uid = card.uid;
-  div.dataset.zone = zone;
-  div.title = `${card.name} [${card.id || ''}]`;
-  // DB画像があれば使う、なければ色帯
-  const imgSrc = card.imageB64
-    ? `data:image/jpeg;base64,${card.imageB64}`
-    : (card.ghImgUrl || null);
-  const faceContent = imgSrc
-    ? `<img src="${imgSrc}" style="width:100%;height:100%;object-fit:cover;border-radius:4px;display:block;">`
-    : cardFaceHtml(card);
-  div.innerHTML = `<div class="g-card-face">${faceContent}</div><button class="card-menu-btn">▼</button>`;
-  div.querySelector('.card-menu-btn').addEventListener('click', e => {
-    e.stopPropagation();
-    openCtxMenu(e, card, zone);
-  });
-  div.querySelector('.g-card-face').addEventListener('click', () => showCardDetail(card));
-  div.addEventListener('dragstart', e => {
-    e.dataTransfer.setData('uid', card.uid);
-    e.dataTransfer.setData('zone', zone);
-  });
-  return div;
-}
-
-// ============================================================
-// DRAG & DROP
-// ============================================================
-function onDragOver(e) {
-  e.preventDefault();
-  e.currentTarget.classList.add('dragover');
-}
-document.addEventListener('dragleave', e => {
-  if (e.target.classList.contains('field-drop')) e.target.classList.remove('dragover');
-});
-function onDrop(e, targetZone) {
-  e.preventDefault();
-  e.currentTarget.classList.remove('dragover');
-  const uid = parseInt(e.dataTransfer.getData('uid'));
-  const fromZone = e.dataTransfer.getData('zone');
-  moveCard(uid, fromZone, targetZone);
-}
-
-function moveCard(uid, from, to) {
-  const fromArr = zoneArr(from);
-  const idx = fromArr.findIndex(c => c.uid === uid);
-  if (idx < 0) return;
-  const card = fromArr.splice(idx, 1)[0];
-  card.tapped = false;
-  zoneArr(to).push(card);
-  renderGame();
-  showLog(`${card.name}: ${zoneName(from)} → ${zoneName(to)}`);
-}
-
-function zoneArr(z) {
-  if (z === 'hand')   return gState.hand;
-  if (z === 'battle') return gState.battle;
-  if (z === 'ikusei') return gState.ikusei;
-  if (z === 'trash')  return gState.trash;
-  return [];
-}
-function zoneName(z) {
-  return { hand:'手札', battle:'バトル場', ikusei:'育成エリア', trash:'トラッシュ' }[z] || z;
-}
-
-// ============================================================
-// CONTEXT MENU
-// ============================================================
-function openCtxMenu(e, card, zone) {
-  const ctx = document.getElementById('ctx');
-  ctx.innerHTML = '';
-  const items = [];
-  if (zone === 'hand') {
-    items.push(['バトル場に出す', () => moveCard(card.uid, 'hand', 'battle')]);
-    items.push(['育成エリアに出す', () => moveCard(card.uid, 'hand', 'ikusei')]);
-    items.push(['トラッシュ', () => moveCard(card.uid, 'hand', 'trash')]);
-    items.push(['カード詳細', () => showCardDetail(card)]);
-  }
-  if (zone === 'battle') {
-    items.push([card.tapped ? '起こす（スタンド）' : 'レスト（横向き）', () => {
-      card.tapped = !card.tapped;
-      renderGame();
-      showLog(`${card.name}: ${card.tapped ? 'レスト' : 'スタンド'}`);
-    }]);
-    items.push(['育成エリアへ', () => moveCard(card.uid, 'battle', 'ikusei')]);
-    items.push(['手札に戻す', () => moveCard(card.uid, 'battle', 'hand')]);
-    items.push(['トラッシュ', () => moveCard(card.uid, 'battle', 'trash')]);
-    items.push(['カード詳細', () => showCardDetail(card)]);
-  }
-  if (zone === 'ikusei') {
-    items.push(['バトル場に移動', () => moveCard(card.uid, 'ikusei', 'battle')]);
-    items.push(['トラッシュ', () => moveCard(card.uid, 'ikusei', 'trash')]);
-    items.push(['カード詳細', () => showCardDetail(card)]);
-  }
-  items.forEach(([label, fn]) => {
-    const d = document.createElement('div');
-    d.className = 'ctx-item';
-    d.textContent = label;
-    d.onclick = () => { fn(); ctx.classList.remove('open'); };
-    ctx.appendChild(d);
-  });
-  ctx.style.left = Math.min(e.clientX, window.innerWidth - 170) + 'px';
-  ctx.style.top  = Math.min(e.clientY, window.innerHeight - items.length * 34 - 20) + 'px';
-  ctx.classList.add('open');
-}
-document.addEventListener('click', () => document.getElementById('ctx').classList.remove('open'));
-
-// ============================================================
-// ACTIONS
-// ============================================================
-function drawCard() {
-  if (!gState.mainDeck.length) { showLog('⚠ デッキが空！'); return; }
-  const card = gState.mainDeck.shift();
-  gState.hand.push(card);
-  renderGame();
-  showLog(`ドロー: ${card.name}`);
-}
-function drawEgg() {
-  if (!gState.eggDeck.length) { showLog('⚠ 育成デッキが空！'); return; }
-  const card = gState.eggDeck.shift();
-  gState.ikusei.push(card);
-  renderGame();
-  showLog(`育成エリアへ: ${card.name}`);
-}
-function shuffleMainDeck() {
-  gState.mainDeck = shuffle(gState.mainDeck);
-  showLog('デッキをシャッフル');
-}
-
-// ============================================================
-// MODALS
-// ============================================================
-function showTrashModal() {
-  const el = document.getElementById('trash-modal-cards');
-  el.innerHTML = '';
-  [...gState.trash].reverse().forEach(card => {
-    const tface = document.createElement('div');
-    tface.title = card.name;
-    tface.style.cssText = 'width:60px;height:84px;border-radius:4px;border:1px solid var(--border);cursor:pointer;display:flex;flex-direction:column;overflow:hidden;';
-    tface.innerHTML = cardFaceHtml(card);
-    tface.onclick = () => showCardDetail(card);
-    el.appendChild(tface);
-  });
-  document.getElementById('trash-modal').classList.add('open');
-}
-function closeModal(id) { document.getElementById(id).classList.remove('open'); }
-document.getElementById('trash-modal').addEventListener('click', e => {
-  if (e.target === document.getElementById('trash-modal')) closeModal('trash-modal');
-});
-
-// ============================================================
-// CARD DETAIL
-// ============================================================
-// 翻訳キャッシュ
-const translateCache = {};
-let currentDetailCard = null;
-// ============================================================
-// カード編集
-// ============================================================
-let editingCard = null;
-let editingNewImageB64 = null;
-
-function openCardEdit() {
-  const card = currentDetailCard;
-  if (!card) return;
-  editingCard = card;
-  editingNewImageB64 = null;
-
-  // フォームに値をセット
-  document.getElementById('edit-id').value           = card.id || '';
-  document.getElementById('edit-name').value         = card.name || '';
-  document.getElementById('edit-type').value         = card.type || 'DIGIMON';
-  document.getElementById('edit-level').value        = card.level ?? '';
-  document.getElementById('edit-color').value        = card.color || '';
-  document.getElementById('edit-color2').value       = card.color2 || '';
-  document.getElementById('edit-cost').value         = card.cost ?? card.play_cost ?? '';
-  document.getElementById('edit-dp').value           = card.dp ?? '';
-  document.getElementById('edit-trait').value        = card.trait || '';
-  document.getElementById('edit-effect').value       = card.effect || card.main_effect || '';
-  document.getElementById('edit-source-effect').value = card.source_effect || '';
-  document.getElementById('edit-status').textContent = '';
-
-  // 画像プレビュー
-  const preview = document.getElementById('edit-img-preview');
-  const imgSrc = card.imageB64
-    ? `data:image/jpeg;base64,${card.imageB64}`
-    : ghImgUrl(card.id);
-  if (imgSrc) {
-    preview.innerHTML = `<img src="${imgSrc}" style="width:100%;height:100%;object-fit:cover;">`;
-  } else {
-    preview.textContent = '画像変更';
-  }
-
-  // 画像変更ハンドラ
-  const imgInput = document.getElementById('edit-img-input');
-  imgInput.onchange = (e) => {
-    const file = e.target.files[0];
-    if (!file) return;
-    const reader = new FileReader();
-    reader.onload = (ev) => {
-      const b64 = ev.target.result.split(',')[1];
-      editingNewImageB64 = b64;
-      preview.innerHTML = `<img src="${ev.target.result}" style="width:100%;height:100%;object-fit:cover;">`;
-    };
-    reader.readAsDataURL(file);
+(function () {
+  // ---------- Tab switching ----------
+  const tabButtons = document.querySelectorAll('.tab-btn');
+  const tabPanels = {
+    search: document.getElementById('tab-search'),
+    deck: document.getElementById('tab-deck'),
+    db: document.getElementById('tab-db'),
   };
-
-  document.getElementById('edit-modal').classList.add('open');
-}
-
-async function saveCardEdit() {
-  const status = document.getElementById('edit-status');
-  const cfg = loadSettings();
-  if (!cfg.token) { status.textContent = '保存にはGitHub Tokenが必要です'; status.style.color='var(--red)'; return; }
-
-  status.textContent = '保存中…'; status.style.color = 'var(--text2)';
-
-  try {
-    const updated = {
-      ...editingCard,
-      name:          document.getElementById('edit-name').value.trim(),
-      type:          document.getElementById('edit-type').value,
-      level:         document.getElementById('edit-level').value !== '' ? Number(document.getElementById('edit-level').value) : null,
-      color:         document.getElementById('edit-color').value || null,
-      color2:        document.getElementById('edit-color2').value || null,
-      cost:          document.getElementById('edit-cost').value !== '' ? Number(document.getElementById('edit-cost').value) : null,
-      dp:            document.getElementById('edit-dp').value !== '' ? Number(document.getElementById('edit-dp').value) : null,
-      trait:         document.getElementById('edit-trait').value.trim() || null,
-      effect:        document.getElementById('edit-effect').value.trim(),
-      source_effect: document.getElementById('edit-source-effect').value.trim() || null,
-    };
-
-    // 画像が変更された場合はアップロード
-    if (editingNewImageB64) {
-      await ghUploadFile(`cards/${updated.id}.jpg`, editingNewImageB64, `Update card image: ${updated.id}`);
-      updated.imageB64 = editingNewImageB64;
-    }
-
-    // db.json更新
-    const db = await loadCardDb();
-    db[updated.id] = updated;
-    cardDbCache = db;
-    const dbB64 = btoa(unescape(encodeURIComponent(JSON.stringify(db, null, 2))));
-    await ghUploadFile('cards/db.json', dbB64, `Edit card: ${updated.id}`);
-
-    // ローカルDBも更新
-    await dbPut(updated);
-
-    status.textContent = '✓ 保存しました！'; status.style.color = 'var(--green)';
-    editingCard = updated;
-
-    // カード詳細も更新
-    setTimeout(() => {
-      closeModal('edit-modal');
-      showCardDetail(updated);
-    }, 800);
-
-  } catch(e) {
-    status.textContent = `エラー: ${e.message}`; status.style.color = 'var(--red)';
-  }
-}
-
-// カード詳細から直接画像を差し替え
-function replaceCardImage() {
-  if (!currentDetailCard) return;
-  const input = document.createElement('input');
-  input.type = 'file'; input.accept = 'image/*';
-  input.onchange = async (e) => {
-    const file = e.target.files[0];
-    if (!file) return;
-    const reader = new FileReader();
-    reader.onload = async (ev) => {
-      const b64 = ev.target.result.split(',')[1];
-      const cfg = loadSettings();
-      if (!cfg.token) { alert('GitHub Tokenが必要です'); return; }
-      try {
-        await ghUploadFile(`cards/${currentDetailCard.id}.jpg`, b64, `Update image: ${currentDetailCard.id}`);
-        const updated = {...currentDetailCard, imageB64: b64};
-        const db = await loadCardDb();
-        db[updated.id] = updated;
-        cardDbCache = db;
-        const dbB64 = btoa(unescape(encodeURIComponent(JSON.stringify(db, null, 2))));
-        await ghUploadFile('cards/db.json', dbB64, `Update image: ${updated.id}`);
-        await dbPut(updated);
-        showCardDetail(updated);
-      } catch(e) { alert('エラー: ' + e.message); }
-    };
-    reader.readAsDataURL(file);
-  };
-  input.click();
-}
-
-function openGitHubDb() {
-  window.open(`https://github.com/${GH_USER}/${GH_REPO}/blob/main/cards/db.json`, '_blank');
-}
-
-
-
-async function showCardDetail(card) {
-  currentDetailCard = card;
-  const cdImg = document.getElementById('cd-img');
-  cdImg.style.cssText = 'display:flex;flex-direction:column;overflow:hidden;border-radius:6px;flex-shrink:0;width:120px;height:168px;';
-  // GitHub画像があれば詳細でも表示
-  if (card.ghImgUrl || card.imageB64) {
-    const src = card.imageB64 ? `data:image/jpeg;base64,${card.imageB64}` : card.ghImgUrl;
-    cdImg.style.cssText = 'flex-shrink:0;width:120px;height:168px;border-radius:6px;overflow:hidden;';
-    cdImg.innerHTML = `<img src="${src}" style="width:100%;height:100%;object-fit:cover;">`;
-  } else {
-    cdImg.style.cssText = 'display:flex;flex-direction:column;overflow:hidden;border-radius:6px;flex-shrink:0;width:120px;height:168px;';
-  }
-  const cdSegs = [card.color, card.color2].filter(Boolean);
-  const cdCols = (cdSegs.length ? cdSegs : ['Colorless']).map(c => `<div style="flex:1;background:${colorHex(c)}"></div>`).join('');
-
-  // 画像: ghImgUrl を毎回計算（DBカードにもURL付与）
-  const resolvedImgUrl = card.imageB64
-    ? `data:image/jpeg;base64,${card.imageB64}`
-    : ghImgUrl(card.id);
-
-  if (resolvedImgUrl) {
-    cdImg.style.cssText = 'flex-shrink:0;width:120px;height:168px;border-radius:6px;overflow:hidden;';
-    cdImg.innerHTML = `<img src="${resolvedImgUrl}" style="width:100%;height:100%;object-fit:cover;" onerror="this.parentElement.innerHTML='<div style=\'flex:1;display:flex;\'>${cdCols}</div>'">`;
-  } else {
-    cdImg.style.cssText = 'display:flex;flex-direction:column;overflow:hidden;border-radius:6px;flex-shrink:0;width:120px;height:168px;';
-    cdImg.innerHTML = `<div style="flex:1;display:flex;">${cdCols}</div><div style="background:rgba(0,0,0,0.8);padding:6px 8px;"><div style="font-size:13px;font-weight:bold;color:#aac8ff;">${cardTypeLabel(card)}</div><div style="font-size:11px;color:#ffe080;">${cardCostLabel(card)}</div><div style="font-size:10px;color:#e8eeff;">${card.name||card.name_en||''}</div></div>`;
-  }
-
-  // 名前: 日本語優先
-  document.getElementById('cd-name').textContent = card.name || card.name_en || '';
-  document.getElementById('cd-id').textContent = card.id || '';
-
-  // コスト: DB(cost) と API(play_cost) どちらも対応
-  const displayCost = card.cost ?? card.play_cost ?? null;
-  const displayEvoCost = card.evolution_cost ?? null;
-  const stats = [
-    card.type  && `タイプ: ${jaType(card.type)}`,
-    card.color && `カラー: ${jaColor(card.color)}${card.color2 ? ' / ' + jaColor(card.color2) : ''}`,
-    card.level && `レベル: ${card.level}`,
-    card.dp    && `DP: ${Number(card.dp).toLocaleString()}`,
-    displayCost    != null && `登場コスト: ${displayCost}`,
-    displayEvoCost != null && `進化コスト: ${displayEvoCost}`,
-    card.rarity    && `レアリティ: ${card.rarity}`,
-    card.trait     && `特徴: ${card.trait}`,
-  ].filter(Boolean).join('\n');
-  document.getElementById('cd-stats').textContent = stats;
-
-  const effectEl = document.getElementById('cd-effect');
-  document.getElementById('card-detail-overlay').classList.add('open');
-
-  // 効果テキスト: 日本語(effect)優先 → なければ英語(main_effect)を翻訳
-  const jaEffect = [card.effect, card.source_effect].filter(Boolean).join('\n\n--- 進化元効果 ---\n');
-  const enEffect = [card.main_effect, card.source_effect_en].filter(Boolean).join('\n\n--- 進化元効果 ---\n');
-
-  if (jaEffect.trim()) {
-    // DBに日本語効果あり → そのまま表示
-    effectEl.textContent = jaEffect;
-    return;
-  }
-  if (!enEffect.trim()) { effectEl.textContent = '（効果なし）'; return; }
-
-  // 翻訳キャッシュ確認
-  const cacheKey = card.id || card.name;
-  if (translateCache[cacheKey]) { effectEl.textContent = translateCache[cacheKey]; return; }
-
-  effectEl.textContent = '翻訳中…';
-  try {
-    const cfg2 = loadSettings();
-    const res = await fetch('https://api.anthropic.com/v1/messages', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'x-api-key': cfg2.anthropicKey,
-        'anthropic-version': '2023-06-01',
-        'anthropic-dangerous-direct-browser-access': 'true',
-      },
-      body: JSON.stringify({
-        model: 'claude-sonnet-4-5',
-        max_tokens: 800,
-        messages: [{
-          role: 'user',
-          content: `次のデジモンカードゲームの効果テキストを日本語に翻訳してください。[On Play][When Digivolving]などのタグはそのまま残し、固有名詞は英語のままでOKです。翻訳文のみ返してください。\n\n${enEffect}`
-        }]
-      })
-    });
-    const data = await res.json();
-    const translated = data.content?.[0]?.text || enEffect;
-    translateCache[cacheKey] = translated;
-    effectEl.textContent = translated;
-  } catch(e) {
-    effectEl.textContent = enEffect;
-  }
-}
-function closeCardDetail() { document.getElementById('card-detail-overlay').classList.remove('open'); }
-
-// ============================================================
-// PDF PROCESSING
-// ============================================================
-
-// PDFをページ画像に変換して9枚切り抜き→Claude APIで読み取り→DB保存
-document.addEventListener('DOMContentLoaded', () => {
-  const input = document.getElementById('pdf-upload');
-  if (input) {
-    input.addEventListener('change', async (e) => {
-      const file = e.target.files[0];
-      if (!file) return;
-      await processPDF(file);
-      e.target.value = '';
+  function showTab(tabKey) {
+    tabButtons.forEach(b => b.classList.toggle('active', b.dataset.tab === tabKey));
+    Object.entries(tabPanels).forEach(([key, el]) => {
+      el.style.display = (key === tabKey) ? '' : 'none';
     });
   }
-});
 
-async function processPDF(file) {
-  const status = document.getElementById('pdf-status');
-  status.textContent = 'PDFを読み込み中…';
-  status.style.color = 'var(--accent2)';
-  try {
-    // PDF.jsで読み込み
-    const pdfjsLib = await loadPdfJs();
-    const arrayBuffer = await file.arrayBuffer();
-    const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
-    const totalPages = pdf.numPages;
-    status.textContent = `${totalPages}ページ検出。処理中…`;
-
-    let saved = 0;
-    let skipped = 0;
-
-    for (let pageNum = 1; pageNum <= totalPages; pageNum++) {
-      status.textContent = `ページ ${pageNum}/${totalPages} 処理中…`;
-      const page = await pdf.getPage(pageNum);
-      const scale = 2.5;
-      const viewport = page.getViewport({ scale });
-      const canvas = document.createElement('canvas');
-      canvas.width  = viewport.width;
-      canvas.height = viewport.height;
-      const ctx = canvas.getContext('2d');
-      await page.render({ canvasContext: ctx, viewport }).promise;
-
-      // 空白トリム
-      const imgData = ctx.getImageData(0, 0, canvas.width, canvas.height);
-      const trimmed = trimWhitespace(canvas, imgData);
-
-      // 9枚に切り分け（{full, effect}のペア）
-      const cards9 = split3x3(trimmed);
-
-      // 各カードをClaude APIで読み取り
-      for (let i = 0; i < cards9.length; i++) {
-        const { full: cardCanvas, effect: effectCanvas } = cards9[i];
-        const b64Full   = cardCanvas.toDataURL('image/jpeg', 0.92).split(',')[1];
-        const b64Effect = effectCanvas.toDataURL('image/jpeg', 0.95).split(',')[1];
-        status.textContent = `P${pageNum} カード${i+1}/9 読み取り中…`;
-        try {
-          const cardInfo = await readCardWithClaude(b64Full, b64Effect);
-          if (cardInfo && cardInfo.id) {
-            // 既存チェック
-            const db = await loadCardDb();
-            if (!db[cardInfo.id]) {
-              status.textContent = `P${pageNum} カード${i+1}/9 GitHubに保存中: ${cardInfo.name}…`;
-              await saveCardToGitHub(cardInfo, b64Full, status);
-              // ローカルDBにも保存（高速アクセス用）
-              cardInfo.imageB64 = b64Full;
-              await dbPut(cardInfo);
-              saved++;
-            } else {
-              skipped++;
-            }
-          }
-        } catch(e) {
-          console.warn('カード読み取りエラー:', e);
-        }
-        await sleep(300); // レート制限対策
-      }
-    }
-    status.textContent = `✓ 完了: ${saved}枚登録 / ${skipped}枚スキップ（既存）`;
-    status.style.color = 'var(--green)';
-  } catch(e) {
-    status.textContent = `エラー: ${e.message}`;
-    status.style.color = 'var(--red)';
-    console.error(e);
-    if (e.message.includes('APIキー')) {
-      // 設定モーダルを自動で開く
-      openSettings();
-    }
-  }
-}
-
-// PDF.jsを動的ロード
-function loadPdfJs() {
-  return new Promise((resolve, reject) => {
-    if (window.pdfjsLib) { resolve(window.pdfjsLib); return; }
-    const script = document.createElement('script');
-    script.src = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js';
-    script.onload = () => {
-      window.pdfjsLib.GlobalWorkerOptions.workerSrc =
-        'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
-      resolve(window.pdfjsLib);
-    };
-    script.onerror = reject;
-    document.head.appendChild(script);
+  tabButtons.forEach(btn => {
+    btn.addEventListener('click', () => showTab(btn.dataset.tab));
   });
-}
 
-// 空白トリム
-function trimWhitespace(canvas, imgData) {
-  const { width, height, data } = imgData;
-  const isWhiteRow = (y) => {
-    let sum = 0;
-    for (let x = 0; x < width; x++) {
-      const i = (y * width + x) * 4;
-      sum += (data[i] + data[i+1] + data[i+2]) / 3;
-    }
-    return (sum / width) > 225;
-  };
-  const isWhiteCol = (x) => {
-    let sum = 0;
-    for (let y = 0; y < height; y++) {
-      const i = (y * width + x) * 4;
-      sum += (data[i] + data[i+1] + data[i+2]) / 3;
-    }
-    return (sum / height) > 225;
-  };
-  let top = 0, bottom = height-1, left = 0, right = width-1;
-  while (top < height && isWhiteRow(top)) top++;
-  while (bottom > top && isWhiteRow(bottom)) bottom--;
-  while (left < width && isWhiteCol(left)) left++;
-  while (right > left && isWhiteCol(right)) right--;
+  // DB管理は主要タブと並べず、ヘッダーの控えめなリンクから開く
+  document.getElementById('openDbTab').addEventListener('click', () => showTab('db'));
 
-  const out = document.createElement('canvas');
-  out.width  = right - left + 1;
-  out.height = bottom - top + 1;
-  out.getContext('2d').drawImage(canvas, left, top, out.width, out.height, 0, 0, out.width, out.height);
-  return out;
-}
+  // ---------- Settings modal ----------
+  const modal = document.getElementById('settingsModal');
+  const openBtn = document.getElementById('openSettings');
+  const closeBtn = document.getElementById('closeSettings');
+  const saveBtn = document.getElementById('saveSettings');
+  const tokenInput = document.getElementById('ghToken');
+  const repoInput = document.getElementById('ghRepo');
+  const saveMsg = document.getElementById('saveMsg');
 
-// PDF切り抜き（固定座標 + 行数自動検出）
-// 座標はデジカレシピクリエイターPDF 3倍スケール(1786x2526)で計測・確定
-// 余白: 上140px, 下136px, 左89px, 右86px
-// 戻り値: [{full: canvas, effect: canvas}]
-function split3x3(canvas) {
-  const w = canvas.width, h = canvas.height;
-
-  // スケール係数（基準サイズ 1786x2526 からの比率）
-  const BASE_W = 1786, BASE_H = 2526;
-  const sx_scale = w / BASE_W;
-  const sy_scale = h / BASE_H;
-
-  // 固定座標（3倍スケール・実測値）を実際のサイズにスケール
-  const col_abs   = [86, 624, 1161, 1699].map(x => Math.round(x * sx_scale));
-  const row3_abs  = [136, 890, 1641, 2386].map(y => Math.round(y * sy_scale)); // 3行
-  const row2_mid  = Math.round((136 + 2386) / 2);
-  const row2_abs  = [136, row2_mid, 2386].map(y => Math.round(y * sy_scale));  // 2行
-  const row1_abs  = [136, 2386].map(y => Math.round(y * sy_scale));            // 1行
-
-  // 行数を縦横比で自動判定
-  const ratio = h / w;
-  let rowCuts;
-  if (ratio > 1.2) {
-    rowCuts = row3_abs;
-  } else if (ratio > 0.7) {
-    rowCuts = row2_abs;
-  } else {
-    rowCuts = row1_abs;
+  function loadSettings() {
+    tokenInput.value = localStorage.getItem('digica_gh_token') || '';
+    repoInput.value = localStorage.getItem('digica_gh_repo') || 'KaboTea/digica-tool';
   }
-  const nRows = rowCuts.length - 1;
 
-  const pad = 4;
-  const result = [];
+  openBtn.addEventListener('click', () => { loadSettings(); modal.classList.add('open'); });
+  closeBtn.addEventListener('click', () => modal.classList.remove('open'));
+  modal.addEventListener('click', (e) => { if (e.target === modal) modal.classList.remove('open'); });
 
-  for (let r = 0; r < nRows; r++) {
-    for (let c = 0; c < 3; c++) {
-      const sx = col_abs[c]+pad,  ex = col_abs[c+1]-pad;
-      const sy = rowCuts[r]+pad,  ey = rowCuts[r+1]-pad;
-      const cardW = ex - sx;
-      const cardH = ey - sy;
+  saveBtn.addEventListener('click', () => {
+    localStorage.setItem('digica_gh_token', tokenInput.value.trim());
+    localStorage.setItem('digica_gh_repo', repoInput.value.trim());
+    saveMsg.style.display = 'inline';
+    setTimeout(() => { saveMsg.style.display = 'none'; }, 1800);
+  });
 
-      // カード全体
-      const full = document.createElement('canvas');
-      full.width = cardW; full.height = cardH;
-      full.getContext('2d').drawImage(canvas, sx, sy, cardW, cardH, 0, 0, cardW, cardH);
-
-      // 効果エリア（下33%）を2倍に拡大
-      const effectY = Math.round(cardH * 0.67);
-      const effectH = cardH - effectY;
-      const effect = document.createElement('canvas');
-      effect.width  = cardW * 2;
-      effect.height = effectH * 2;
-      effect.getContext('2d').drawImage(
-        canvas,
-        sx, sy + effectY, cardW, effectH,
-        0, 0, cardW * 2, effectH * 2
-      );
-
-      result.push({ full, effect });
-    }
-  }
-  return result;
-}
-
-// Claude APIでカード情報読み取り
-async function readCardWithClaude(b64Full, b64Effect) {
-  const cfg = loadSettings();
-  if (!cfg.anthropicKey) throw new Error('Anthropic APIキーが設定されていません。⚙️設定から入力してください');
-  const res = await fetch('https://api.anthropic.com/v1/messages', {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      'x-api-key': cfg.anthropicKey,
-      'anthropic-version': '2023-06-01',
-      'anthropic-dangerous-direct-browser-access': 'true',
+  // ---------- GitHub API helpers (common, used by later phases) ----------
+  // Exposed on window.DigicaGitHub so Phase 1/3 code can reuse them.
+  window.DigicaGitHub = {
+    config() {
+      return {
+        token: localStorage.getItem('digica_gh_token') || '',
+        repo: localStorage.getItem('digica_gh_repo') || '',
+      };
     },
-    body: JSON.stringify({
-      model: 'claude-sonnet-4-5',
-      max_tokens: 600,
-      messages: [{
-        role: 'user',
-        content: [
-          { type: 'image', source: { type: 'base64', media_type: 'image/jpeg', data: b64Full } },
-          { type: 'text', text: '↑カード全体画像。↓効果テキストエリアの拡大画像（こちらを優先してテキストを読み取ってください）' },
-          { type: 'image', source: { type: 'base64', media_type: 'image/jpeg', data: b64Effect } },
-          { type: 'text', text: `デジモンカードゲームのカード画像（全体＋効果エリア拡大）です。以下のルールに従いJSONで情報を抽出してください。
 
-【ルビ・フリガナは必ず無視すること】
-カードの効果テキストには漢字の上に小さくふりがなが付いています。これらの小文字（じぶん・ターン・かい・あか・き など）は本文ではないので絶対に含めないこと。
+    async getFile(path) {
+      const { token, repo } = this.config();
+      if (!token || !repo) throw new Error('GitHub設定(トークン/リポジトリ)が未設定です');
+      const res = await fetch(`https://api.github.com/repos/${repo}/contents/${path}`, {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Accept': 'application/vnd.github+json',
+        },
+      });
+      if (res.status === 404) return null; // file doesn't exist yet
+      if (!res.ok) throw new Error(`GitHub取得エラー: ${res.status}`);
+      const data = await res.json();
+      const content = decodeURIComponent(escape(atob(data.content.replace(/\n/g, ''))));
+      return { content, sha: data.sha };
+    },
 
-【カード種別】
-上部の表記で判断:
-- DIGITAMA → type="DIGITAMA"（タマゴカード）
-- DIGIMON → type="DIGIMON"
-- TAMER → type="TAMER"
-- OPTION → type="OPTION"
-- DIGIMON / OPTION → type="OPTION"（デュアルカード）
-
-【各タイプの存在するフィールド】
-- DIGITAMA: level=Lv数値, cost=null, dp=null, effect=null, source_effect=進化元効果のみ
-- DIGIMON:  level=Lv数値, cost=登場コスト（左上の大きい数字）, dp=DP数値（右上 例:2000/5000/12000/15000）, effect=本体効果, source_effect=進化元効果
-- TAMER:    level=null, dp=null, cost=登場コスト, effect=本体効果, source_effect=null
-- OPTION:   level=null, dp=null, cost=使用コスト, effect=本体効果, source_effect=null
-※存在しないフィールドは必ずnullにすること。絶対に存在しない値を作らないこと。
-
-【効果テキストの読み取りルール】
-- 【進化時】【自分のターン】【登場時】【攻撃時】【消滅時】【ターン1回】【オールターン】【カウンター】【ストレイド】などのタグをそのまま含める
-- 《セキュリティアタック+1》《アタック》《ラッシュ》《ブロッカー》などの《》タグもそのまま含める
-- 〈バースト進化〉〈リカバリー+1〉などの特殊キーワードもそのまま
-- Aceカードの「オーバーフロー(-5)」などの記載もそのまま含める
-- 効果が複数ある場合は改行（\n）で区切る
-- 進化元効果（カード下部の別枠）はsource_effectに入れる
-
-【色の判断】
-カード枠・背景の色: 赤=Red, 青=Blue, 黄=Yellow, 緑=Green, 黒=Black, 紫=Purple, 白=White
-2色カードはcolor2にも入れる
-
-【その他】
-- カードIDは右下（例: BT21-004, EX4-005, P-037, AD1-016, BT17-041）
-- traitは特徴欄（例: 成長期、ワクチン種、恐竜型）を「/」区切りで
-- SAMPLEスタンプがあっても読み取れる情報は読む
-- Aceカードはname末尾に「ACE」を含む場合がある（例: シャイングレイモン:バーストモードACE）
-
-JSONのみ返すこと（説明文・コードブロック不要）:
-{"id":"","name":"","level":null,"type":"","color":"","color2":null,"cost":null,"dp":null,"effect":"","source_effect":null,"trait":""}` }
-        ]
-      }]
-    })
-  });
-  const data = await res.json();
-  let text = data.content?.[0]?.text || '';
-  text = text.replace(/```json|```/g, '').trim();
-  return JSON.parse(text);
-}
-
-// カードDB検索（ローカルDB → API fallback）
-async function getCardData(id) {
-  const cached = await dbGet(id);
-  if (cached) return cached;
-  return null;
-}
-
-// DB内の画像URLを返す（カード表示用）
-function dbImgUrl(card) {
-  if (card.imageB64) return `data:image/jpeg;base64,${card.imageB64}`;
-  return null;
-}
-
-function sleep(ms) { return new Promise(r => setTimeout(r, ms)); }
-
-
-// ============================================================
-// GITHUB 連携
-// ============================================================
-
-// 設定はlocalStorageに保存（トークンはブラウザローカルのみ）
-const GH_USER = 'KaboTea';
-const GH_REPO = 'digica-tool';
-
-function loadSettings() {
-  return {
-    token:        localStorage.getItem('ghToken')        || '',
-    anthropicKey: localStorage.getItem('anthropicKey')   || '',
-    user:         GH_USER,
-    repo:         GH_REPO,
-  };
-}
-function openSettings() {
-  const cfg = loadSettings();
-  document.getElementById('cfg-token').value     = cfg.token;
-  document.getElementById('cfg-anthropic').value = cfg.anthropicKey;
-  document.getElementById('cfg-status').textContent = '';
-  document.getElementById('settings-modal').classList.add('open');
-}
-async function saveSettings() {
-  const token = document.getElementById('cfg-token').value.trim();
-  const status = document.getElementById('cfg-status');
-  if (!token) { status.textContent = 'Tokenを入力してください'; status.style.color='var(--red)'; return; }
-  status.textContent = '接続確認中…'; status.style.color = 'var(--text2)';
-  try {
-    const res = await fetch(`https://api.github.com/repos/${GH_USER}/${GH_REPO}`, {
-      headers: { Authorization: `token ${token}`, Accept: 'application/vnd.github.v3+json' }
-    });
-    if (!res.ok) throw new Error(`HTTP ${res.status}`);
-    localStorage.setItem('ghToken', token);
-    const anthropicKey = document.getElementById('cfg-anthropic').value.trim();
-    if (anthropicKey) localStorage.setItem('anthropicKey', anthropicKey);
-    status.textContent = '✓ 接続成功！設定を保存しました';
-    status.style.color = 'var(--green)';
-  } catch(e) {
-    status.textContent = `接続失敗: ${e.message}`;
-    status.style.color = 'var(--red)';
-  }
-}
-
-// GitHubにファイルをアップロード（Base64）
-async function ghUploadFile(path, b64content, message) {
-  const cfg = loadSettings();
-  if (!cfg.token) throw new Error('GitHub Token未設定');
-  const url = `https://api.github.com/repos/${cfg.user}/${cfg.repo}/contents/${path}`;
-  // 既存ファイルのSHAを取得（更新の場合に必要）
-  let sha = null;
-  try {
-    const existing = await fetch(url, { headers: { Authorization: `token ${cfg.token}` } });
-    if (existing.ok) { const d = await existing.json(); sha = d.sha; }
-  } catch(e) {}
-  const body = { message, content: b64content };
-  if (sha) body.sha = sha;
-  const res = await fetch(url, {
-    method: 'PUT',
-    headers: { Authorization: `token ${cfg.token}`, 'Content-Type': 'application/json' },
-    body: JSON.stringify(body)
-  });
-  if (!res.ok) throw new Error(`GitHub upload failed: ${res.status}`);
-  return await res.json();
-}
-
-// GitHubからファイルを取得
-async function ghGetFile(path) {
-  const cfg = loadSettings();
-  if (!cfg.token || !cfg.user || !cfg.repo) return null;
-  const url = `https://api.github.com/repos/${cfg.user}/${cfg.repo}/contents/${path}`;
-  try {
-    const res = await fetch(url, { headers: { Authorization: `token ${cfg.token}` } });
-    if (!res.ok) return null;
-    const d = await res.json();
-    return { content: atob(d.content.replace(/\n/g, '')), sha: d.sha };
-  } catch(e) { return null; }
-}
-
-// カードDB (db.json) をGitHubから取得
-let cardDbCache = null;
-async function loadCardDb() {
-  if (cardDbCache) return cardDbCache;
-  try {
-    // Token不要でpublic URLから直接fetch（キャッシュ回避のためtimestamp付き）
-    const url = `https://raw.githubusercontent.com/${GH_USER}/${GH_REPO}/main/cards/db.json?t=${Date.now()}`;
-    const res = await fetch(url);
-    if (res.ok) {
-      cardDbCache = await res.json();
-    } else {
-      cardDbCache = {};
-    }
-  } catch(e) {
-    cardDbCache = {};
-  }
-  return cardDbCache;
-}
-
-// digimoncard.io APIから英語データを取得してマージ
-async function fetchEnglishCardData(cardId) {
-  try {
-    const target = `https://digimoncard.io/api-public/search.php?card=${encodeURIComponent(cardId)}&series=Digimon+Card+Game`;
-    const url = `https://api.allorigins.win/get?url=${encodeURIComponent(target)}`;
-    const res = await fetch(url);
-    if (!res.ok) return null;
-    const wrapper = await res.json();
-    const data = JSON.parse(wrapper.contents);
-    if (!data || !data.length) return null;
-    return data.find(c => c.id === cardId) || data[0];
-  } catch(e) { return null; }
-}
-
-// カードDBに1枚追加してGitHubに保存
-async function saveCardToGitHub(cardInfo, imageB64, status=null) {
-  const cfg = loadSettings();
-  if (!cfg.token) { alert('設定からGitHub Tokenを設定してください'); return; }
-
-  // APIからカードデータ取得
-  status && (status.textContent = `APIからデータ取得中: ${cardInfo.id}…`);
-  const apiData = await fetchCardDataById(cardInfo.id);
-
-  // 効果テキストを翻訳
-  const terms = await loadTerms();
-  let jaEffect = null, jaSourceEffect = null;
-  if (apiData?.main_effect) {
-    status && (status.textContent = `効果テキスト翻訳中: ${cardInfo.id}…`);
-    jaEffect = await translateEffect(apiData.main_effect, terms);
-  }
-  if (apiData?.source_effect) {
-    jaSourceEffect = await translateEffect(apiData.source_effect, terms);
-  }
-
-  const merged = {
-    id:            cardInfo.id,
-    name:          apiData?.name || cardInfo.id,
-    name_ja:       null, // 今後手動で追加可能
-    level:         apiData?.level ?? null,
-    type:          apiData?.type  || '',
-    color:         apiData?.color || '',
-    color2:        apiData?.color2 || null,
-    cost:          apiData?.play_cost ?? null,
-    dp:            apiData?.dp ?? null,
-    effect:        jaEffect,
-    effect_en:     apiData?.main_effect || null,
-    source_effect: jaSourceEffect,
-    source_effect_en: apiData?.source_effect || null,
-    trait:         apiData?.digi_type || null,
-    rarity:        apiData?.rarity || null,
-  };
-
-  // 2. 画像をアップロード
-  const imgPath = `cards/${cardInfo.id}.jpg`;
-  await ghUploadFile(imgPath, imageB64, `Add card image: ${cardInfo.id}`);
-
-  // 3. db.jsonを更新
-  const db = await loadCardDb();
-  db[cardInfo.id] = merged;
-  cardDbCache = db;
-  const dbB64 = btoa(unescape(encodeURIComponent(JSON.stringify(db, null, 2))));
-  await ghUploadFile('cards/db.json', dbB64, `Update db: ${cardInfo.id}`);
-  return merged;
-}
-
-// GitHubのカード画像URLを返す
-function ghImgUrl(cardId) {
-  if (!cardId) return null;
-  // Token不要・常に固定リポジトリを参照（読み取りはpublic）
-  return `https://raw.githubusercontent.com/${GH_USER}/${GH_REPO}/main/cards/${cardId}.jpg`;
-}
-
-// ============================================================
-// UTILS
-// ============================================================
-function shuffle(arr) {
-  const a = [...arr];
-  for (let i = a.length - 1; i > 0; i--) {
-    const j = Math.floor(Math.random() * (i + 1));
-    [a[i], a[j]] = [a[j], a[i]];
-  }
-  return a;
-}
-function showLog(msg) {
-  document.getElementById('game-log').textContent = '> ' + msg;
-}
-
-// ============================================================
-// 用語辞書エディタ
-// ============================================================
-async function openTermsEditor() {
-  const terms = await loadTerms();
-  const text = Object.entries(terms).map(([en, ja]) => `${en} = ${ja}`).join('\n');
-  document.getElementById('terms-editor').value = text;
-  document.getElementById('terms-status').textContent = '';
-  document.getElementById('terms-modal').classList.add('open');
-}
-
-async function saveTerms() {
-  const status = document.getElementById('terms-status');
-  const cfg = loadSettings();
-  if (!cfg.token) { status.textContent = 'GitHub Tokenが必要です'; status.style.color='var(--red)'; return; }
-  try {
-    const lines = document.getElementById('terms-editor').value.split('\n');
-    const terms = {};
-    lines.forEach(line => {
-      const idx = line.indexOf(' = ');
-      if (idx > 0) {
-        terms[line.substring(0, idx).trim()] = line.substring(idx + 3).trim();
+    async putFile(path, contentStr, message, sha) {
+      const { token, repo } = this.config();
+      if (!token || !repo) throw new Error('GitHub設定(トークン/リポジトリ)が未設定です');
+      const body = {
+        message,
+        content: btoa(unescape(encodeURIComponent(contentStr))),
+      };
+      if (sha) body.sha = sha;
+      const res = await fetch(`https://api.github.com/repos/${repo}/contents/${path}`, {
+        method: 'PUT',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Accept': 'application/vnd.github+json',
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(body),
+      });
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}));
+        throw new Error(`GitHub保存エラー: ${res.status} ${err.message || ''}`);
       }
-    });
-    termsCache = terms;
-    const b64 = btoa(unescape(encodeURIComponent(JSON.stringify(terms, null, 2))));
-    await ghUploadFile('cards/terms.json', b64, 'Update terms dictionary');
-    status.textContent = '✓ 保存しました'; status.style.color = 'var(--green)';
-  } catch(e) {
-    status.textContent = `エラー: ${e.message}`; status.style.color = 'var(--red)';
-  }
-}
+      return res.json();
+    },
+  };
 
-// ===== 起動時: Token不要でDBを全員がロード =====
-(async () => {
-  try {
-    await loadCardDb();
-    const count = Object.keys(cardDbCache || {}).length;
-    console.log('カードDB:', count + '枚');
-    const el = document.getElementById('search-results');
-    if (el && count > 0) {
-      el.innerHTML = `<div class="search-loading" style="color:var(--green);">✓ DB: ${count}枚登録済み　日本語で検索できます</div>`;
+  // ---------- Status readout: try loading cards/db.json for header stats ----------
+  let currentDb = null; // { generated_at, source_updated_at, cards: [...] }
+
+  async function loadStatus() {
+    try {
+      const res = await fetch('cards/db.json', { cache: 'no-store' });
+      if (!res.ok) throw new Error('not found');
+      const json = await res.json();
+      currentDb = json;
+      const count = Array.isArray(json.cards) ? json.cards.length : (Array.isArray(json) ? json.length : '?');
+      document.getElementById('statDbCount').textContent = `${count}枚`;
+      document.getElementById('statDbUpdated').textContent = json.generated_at || '?';
+      document.getElementById('dbCurrentCount').textContent = `${count}枚`;
+      document.getElementById('dbCurrentUpdated').textContent = json.generated_at || '--';
+      document.getElementById('dbCurrentSourceDate').textContent = json.source_updated_at || '--';
+    } catch (e) {
+      document.getElementById('statDbCount').textContent = '未生成';
+      document.getElementById('statDbUpdated').textContent = '--';
+      document.getElementById('dbCurrentCount').textContent = '0枚';
+      document.getElementById('dbCurrentUpdated').textContent = '--';
+      document.getElementById('dbCurrentSourceDate').textContent = '--';
     }
-  } catch(e) {
-    console.warn('DB読み込み失敗:', e);
   }
+  loadStatus();
+
+  // ---------- Phase 1: DB build from heroi.cc bulk-data ----------
+  const logEl = document.getElementById('logConsole');
+  const progressTrack = document.getElementById('progressTrack');
+  const progressFill = document.getElementById('progressFill');
+  const startBtn = document.getElementById('startDbUpdate');
+  const commitBtn = document.getElementById('commitDb');
+  const diffTable = document.getElementById('diffTable');
+
+  function log(msg, cls) {
+    logEl.classList.add('active');
+    const line = document.createElement('div');
+    if (cls) line.className = cls;
+    line.textContent = `> ${msg}`;
+    logEl.appendChild(line);
+    logEl.scrollTop = logEl.scrollHeight;
+  }
+
+  function setProgress(received, total) {
+    progressTrack.classList.add('active');
+    if (total > 0) {
+      progressFill.style.width = `${Math.min(100, (received / total) * 100)}%`;
+    }
+  }
+
+  async function downloadWithProgress(url) {
+    const res = await fetch(url);
+    if (!res.ok) throw new Error(`ダウンロード失敗: HTTP ${res.status}`);
+    const total = parseInt(res.headers.get('content-length') || '0', 10);
+    const reader = res.body.getReader();
+    let received = 0;
+    const chunks = [];
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) break;
+      chunks.push(value);
+      received += value.length;
+      setProgress(received, total);
+      if (total > 0) {
+        log(`ダウンロード中... ${(received / 1024 / 1024).toFixed(1)}MB / ${(total / 1024 / 1024).toFixed(1)}MB`);
+        // keep log from growing unbounded: replace last progress line instead of appending repeatedly
+        const lines = logEl.querySelectorAll('div');
+        if (lines.length > 1) {
+          const prev = lines[lines.length - 2];
+          if (prev.textContent.startsWith('> ダウンロード中')) prev.remove();
+        }
+      }
+    }
+    const blob = new Blob(chunks);
+    const text = await blob.text();
+    return JSON.parse(text);
+  }
+
+  function mapCardAttributes(attrs) {
+    return {
+      number: attrs.number,
+      name: attrs.name,
+      category: attrs.category,
+      level: attrs.level ?? null,
+      color: attrs.color || [],
+      play_cost: attrs['play-cost'] ?? attrs['use-cost'] ?? null,
+      dp: attrs.dp ?? null,
+      form: attrs.form ?? null,
+      attribute: attrs.attribute ?? null,
+      type: attrs.type ?? null,
+      rarity: attrs.rarity ?? null,
+      block: attrs['block-icon'] ?? null,
+      effect: attrs.effect ?? null,
+      security_effect: attrs['security-effect'] ?? null,
+      inherited: attrs['inherited-effect'] ?? null,
+      evo: attrs['digivolution-requirements'] || [],
+      img: attrs.image || null,
+    };
+  }
+
+  let pendingDb = null; // built but not yet committed
+
+  startBtn.addEventListener('click', async () => {
+    startBtn.disabled = true;
+    commitBtn.style.display = 'none';
+    diffTable.classList.remove('active');
+    logEl.innerHTML = '';
+    progressFill.style.width = '0%';
+
+    try {
+      log('heroi.cc の bulk-data 一覧を取得中...');
+      const idxRes = await fetch('https://api.heroi.cc/bulk-data', {
+        headers: { 'Accept': 'application/vnd.api+json' },
+      });
+      if (!idxRes.ok) throw new Error(`bulk-data一覧の取得に失敗しました: HTTP ${idxRes.status}`);
+      const idx = await idxRes.json();
+
+      const jaEntry = idx.data.find(d => d.attributes && d.attributes.name === 'Japanese Cards');
+      if (!jaEntry) throw new Error('日本語カードのbulk-dataエントリが見つかりませんでした');
+
+      const sizeMb = (jaEntry.attributes.size / 1024 / 1024).toFixed(1);
+      log(`日本語カードデータを検出: ${sizeMb}MB (データ元更新日: ${jaEntry.attributes['updated-at']})`, 'ok');
+
+      const raw = await downloadWithProgress(jaEntry.links.download);
+      progressFill.style.width = '100%';
+      log(`ダウンロード完了。${raw.data.length}件のレコードを解析します`, 'ok');
+
+      const cards = raw.data
+        .filter(item => item.type === 'card' && item.attributes && item.attributes['parallel-id'] === 0)
+        .map(item => mapCardAttributes(item.attributes));
+
+      log(`パラレル版を除外し、${cards.length}枚のカードを収録対象にしました`, 'ok');
+
+      pendingDb = {
+        generated_at: new Date().toISOString().slice(0, 10),
+        source: 'heroi.cc bulk-data (ja)',
+        source_updated_at: jaEntry.attributes['updated-at'],
+        cards,
+      };
+
+      const oldCount = currentDb && Array.isArray(currentDb.cards) ? currentDb.cards.length : 0;
+      const newCount = cards.length;
+      const delta = newCount - oldCount;
+
+      document.getElementById('diffOldCount').textContent = `${oldCount}枚`;
+      document.getElementById('diffNewCount').textContent = `${newCount}枚`;
+      const deltaEl = document.getElementById('diffDelta');
+      deltaEl.textContent = `${delta >= 0 ? '+' : ''}${delta}枚`;
+      deltaEl.classList.toggle('neg', delta < 0);
+      diffTable.classList.add('active');
+
+      log('プレビューの準備ができました。内容を確認してコミットしてください。', 'ok');
+      commitBtn.style.display = '';
+    } catch (e) {
+      log(`エラー: ${e.message}`, 'err');
+      console.error(e);
+    } finally {
+      startBtn.disabled = false;
+    }
+  });
+
+  commitBtn.addEventListener('click', async () => {
+    if (!pendingDb) return;
+    commitBtn.disabled = true;
+    try {
+      log('現在のcards/db.jsonを確認中...');
+      const existing = await window.DigicaGitHub.getFile('cards/db.json');
+      log('GitHubへコミット中...');
+      await window.DigicaGitHub.putFile(
+        'cards/db.json',
+        JSON.stringify(pendingDb),
+        `DB更新: ${pendingDb.cards.length}枚 (${pendingDb.source_updated_at})`,
+        existing ? existing.sha : undefined
+      );
+      log(`コミット完了。${pendingDb.cards.length}枚のカードデータベースを保存しました`, 'ok');
+      currentDb = pendingDb;
+      pendingDb = null;
+      commitBtn.style.display = 'none';
+      loadStatus();
+    } catch (e) {
+      log(`コミットエラー: ${e.message}`, 'err');
+      console.error(e);
+    } finally {
+      commitBtn.disabled = false;
+    }
+  });
 })();
 </script>
-
-<!-- 設定モーダル -->
-<div class="modal-overlay" id="settings-modal">
-  <div class="modal" style="width:400px;">
-    <h3>⚙️ 設定</h3>
-    <div style="display:flex;flex-direction:column;gap:12px;margin-top:8px;">
-      <div>
-        <div style="font-size:11px;color:var(--accent2);margin-bottom:4px;">GitHub Personal Access Token</div>
-        <input id="cfg-token" type="password" placeholder="ghp_xxxxxxxxxxxx"
-          style="width:100%;background:var(--bg3);border:1px solid var(--border2);color:var(--text);border-radius:6px;padding:7px 10px;font-size:12px;outline:none;">
-        <div style="font-size:10px;color:var(--text2);margin-top:3px;">repo スコープのToken（PDF登録・書き込み用）</div>
-      </div>
-      <div>
-        <div style="font-size:11px;color:var(--accent2);margin-bottom:4px;">Anthropic API Key</div>
-        <input id="cfg-anthropic" type="password" placeholder="sk-ant-xxxxxxxxxxxx"
-          style="width:100%;background:var(--bg3);border:1px solid var(--border2);color:var(--text);border-radius:6px;padding:7px 10px;font-size:12px;outline:none;">
-        <div style="font-size:10px;color:var(--text2);margin-top:3px;">PDF登録時のカード読み取りに使用（PDF登録する人のみ必要）</div>
-      </div>
-      <div style="font-size:10px;color:var(--text2);background:var(--bg3);border-radius:5px;padding:6px 8px;">
-        リポジトリ: <span style="color:var(--accent2);">KaboTea/digica-tool</span>（固定）
-      </div>
-      <div id="cfg-status" style="font-size:11px;color:var(--text2);min-height:16px;"></div>
-      <button onclick="openTermsEditor()" style="background:var(--bg3);border:1px solid var(--border);color:var(--text2);border-radius:6px;padding:6px;cursor:pointer;font-size:11px;width:100%;">📖 用語辞書を編集</button>
-      <div style="display:flex;gap:8px;">
-        <button onclick="saveSettings()" style="flex:1;background:var(--accent);border:none;color:#fff;border-radius:6px;padding:8px;cursor:pointer;font-size:13px;">保存して接続テスト</button>
-        <button onclick="closeModal('settings-modal')" style="background:var(--bg3);border:1px solid var(--border);color:var(--text2);border-radius:6px;padding:8px 14px;cursor:pointer;font-size:12px;">閉じる</button>
-      </div>
-    </div>
-  </div>
-</div>
 
 </body>
 </html>
